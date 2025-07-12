@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美容皮膚科 料金計算アプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #d81b60;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #d81b60;
+        }
+        
+        .menu-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        
+        .menu-category {
+            margin-bottom: 20px;
+        }
+        
+        .menu-category-title {
+            font-weight: bold;
+            color: #d81b60;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .menu-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .menu-item.selected {
+            background: #fce4ec;
+            border-color: #d81b60;
+        }
+        
+        .menu-item-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .menu-item-header input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .menu-item-name {
+            flex: 1;
+            font-weight: bold;
+        }
+        
+        .menu-item-controls {
+            display: none;
+            margin-left: 30px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .menu-item.selected .menu-item-controls {
+            display: block;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .control-group {
+            flex: 1;
+        }
+        
+        .control-group label {
+            font-size: 14px;
+            font-weight: normal;
+            margin-bottom: 3px;
+        }
+        
+        .control-group select {
+            padding: 5px;
+            font-size: 14px;
+        }
+        
+        .price-type-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .price-type-button {
+            flex: 1;
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .price-type-button:hover {
+            border-color: #d81b60;
+        }
+        
+        .price-type-button.active {
+            background: #d81b60;
+            color: white;
+            border-color: #d81b60;
+        }
+        
+        .price-type-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .price-display {
+            font-size: 16px;
+            font-weight: bold;
+            color: #d81b60;
+            text-align: right;
+            padding: 5px;
+        }
+        
+        .discount-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .discount-checkbox {
+            display: flex;
+            align-items: center;
+            background: #f5f5f5;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        
+        .discount-checkbox input[type="checkbox"] {
+            width: auto;
+            margin-right: 5px;
+            margin-bottom: 0;
+        }
+        
+        .discount-checkbox input[type="checkbox"]:disabled {
+            opacity: 0.5;
+        }
+        
+        .discount-checkbox.disabled {
+            opacity: 0.5;
+        }
+        
+        .discount-checkbox label {
+            margin-bottom: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .selected-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            border: 1px solid #4caf50;
+        }
+        
+        .selected-summary-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+        
+        .weekday-discount-warning {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff8e1;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8e7ed;
+            border-radius: 10px;
+            border: 2px solid #d81b60;
+        }
+        
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+        
+        .price-item-detail {
+            font-size: 14px;
+            color: #666;
+            margin-left: 20px;
+        }
+        
+        .final-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d81b60;
+            text-align: right;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #d81b60;
+        }
+        
+        .button {
+            background: #d81b60;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .button:hover {
+            background: #c2185b;
+        }
+        
+        .warning {
+            color: #ff5722;
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff3e0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>美容皮膚科 料金計算アプリ</h1>
+        
+        <div class="form-group">
+            <label>施術メニューを選択（複数選択可）</label>
+            <div class="menu-list" id="menuList">
+            </div>
+        </div>
+        
+        <div class="selected-summary" id="selectedSummary" style="display: none;">
+            <div class="selected-summary-title">選択中の施術: <span id="selectedCount">0</span>件</div>
+            <div id="selectedTotal">合計: ¥0</div>
+            <div class="weekday-discount-warning" id="discountWarning" style="display: none;">
+            </div>
+        </div>
+        
+        <button class="button" onclick="calculatePrice()">詳細な料金を計算</button>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>計算結果</h3>
+            <div id="priceDetails"></div>
+            <div class="final-price">
+                合計金額: <span id="finalPrice">¥0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const menuData = [
+            { category: "毛穴洗浄", name: "ハイドラジェントル", first: 7700, regular: 14300 },
+            { category: "美容液導入", name: "メソナJ", first: 11000, regular: 22000 },
+            { category: "美容液導入", name: "エレクトロポレーション", first: 6600, regular: 13200 },
+            { category: "IPL", name: "IPL　顔", first: 7700, regular: 14300 },
+            { category: "IPL", name: "IPL　顔＋首", first: 11000, regular: 22000 },
+            { category: "IPL", name: "IPL　手の甲", first: null, regular: 3300 },
+            { category: "IPL", name: "IPL　腕全体", first: null, regular: 7700 },
+            { category: "ピコレーザー", name: "ピコトーニング", first: 7700, regular: 14300 },
+            { category: "ピコレーザー", name: "ピコフラクショナル", first: 11000, regular: 22000 },
+            { category: "ピコレーザー", name: "ピコダブル", first: 18700, regular: 25300 },
+            { category: "ケミカルピーリング", name: "マッサージピール　顔", first: 6600, regular: 13200 },
+            { category: "ケミカルピーリング", name: "マッサージピール　顔＋首", first: 9900, regular: 14300 },
+            { category: "ケミカルピーリング", name: "リバースピール（顔のみ）", first: 7700, regular: 14300 },
+            { category: "ケミカルピーリング", name: "サリチル酸マクロゴール　顔", first: 3300, regular: 6600 },
+            { category: "ケミカルピーリング", name: "サリチル酸マクロゴール　顔＋首", first: 4500, regular: 9900 },
+            { category: "ケミカルピーリング", name: "サリチル酸マクロゴール＋ブルーレーザー　顔", first: 6600, regular: 9900 },
+            { category: "ケミカルピーリング", name: "サリチル酸マグコロール＋ブルーレーザー　顔＋首", first: 9900, regular: 14300 },
+            { category: "ブルーレーザー", name: "ブルーレーザー　顔", first: null, regular: 6600 },
+            { category: "ブルーレーザー", name: "ブルーレーザー　顔＋首", first: null, regular: 9900 },
+            { category: "HIFU", name: "HIFU シャワー(顔下半分)（2mm）", first: 14300, regular: 27500 },
+            { category: "HIFU", name: "HIFU 目（2mm）", first: 17600, regular: 34100 },
+            { category: "HIFU", name: "HIFU 顔 ライト（2mm）", first: 29700, regular: 46400 },
+            { category: "HIFU", name: "HIFU 顔 ミドル (2mm,3mm)", first: 34100, regular: 57200 },
+            { category: "HIFU", name: "HIFU 顔 フル (2mm,3mm,4.5mm)", first: 45100, regular: 68200 },
+            { category: "インモード", name: "インモード FORMA", first: 22000, regular: 35200 },
+            { category: "インモード", name: "インモード Fx", first: 22000, regular: 35200 },
+            { category: "インモード", name: "インモードVリフト（FORMA＋Fxセット）", first: 44000, regular: 57200 },
+            { category: "インモード ルメッカ", name: "ルメッカ", first: 16500, regular: 24200 },
+            { category: "インモード ルメッカ", name: "ルメッカ 顔＋首", first: 24700, regular: 36200 },
+            { category: "ダーマペン", name: "ダーマペン オプションなし", first: 14300, regular: 20900 },
+            { category: "ダーマペン", name: "ダーマペン レチノールアクティブ", first: 15400, regular: 23100 },
+            { category: "ダーマペン", name: "ベルベットスキン", first: 17600, regular: 27500 },
+            { category: "ニードルRF", name: "ニードルRF 顔 （リジュラン追加＋16500）", first: 23100, regular: 35200 },
+            { category: "ニードルRF", name: "ニードルRF 顔 首 （リジュラン追加＋16500）", first: 34300, regular: 46400 },
+            { category: "ニードルRF", name: "ニードルRF 顔 ニキビモード", first: 24200, regular: 37400 },
+            { category: "痩身", name: "クールスカルプティング", first: null, regular: 33000 },
+            { category: "痩身", name: "エムスカルプトNEO", first: 22000, regular: 44000 },
+            { category: "セットメニュー", name: "ハイドラ＋メソナJ", first: 18700, regular: 25300 },
+            { category: "カウンセリング", name: "カウンセリング （VISIA撮影付き）", first: null, regular: 2200 }
+        ];
+
+        let selectedMenus = {};
+        let hasWeekdayDiscount = false;
+        let hasLineDiscount = false;
+
+        function initializeMenuList() {
+            const menuListDiv = document.getElementById('menuList');
+            const categories = [...new Set(menuData.map(item => item.category))];
+            
+            let html = '';
+            categories.forEach(category => {
+                html += `<div class="menu-category">`;
+                html += `<div class="menu-category-title">${category}</div>`;
+                
+                menuData.filter(item => item.category === category).forEach((item, index) => {
+                    const itemId = `menu_${category.replace(/\s/g, '_')}_${index}`;
+                    const showRepeatDiscount = ['インモード FORMA', 'インモード Fx', 'インモードVリフト（FORMA＋Fxセット）'].includes(item.name);
+                    const isDiscountDisabled = ['クールスカルプティング', 'カウンセリング （VISIA撮影付き）'].includes(item.name);
+                    const isPriceTypeDisabled = ['クールスカルプティング', 'カウンセリング （VISIA撮影付き）'].includes(item.name);
+                    
+                    html += `
+                        <div class="menu-item" id="item_${itemId}">
+                            <div class="menu-item-header">
+                                <input type="checkbox" id="${itemId}" onchange="toggleMenu('${itemId}', '${item.name}')">
+                                <label for="${itemId}" class="menu-item-name">${item.name}</label>
+                            </div>
+                            <div class="menu-item-controls">
+                                <div class="control-row">
+                                    <div class="control-group">
+                                        ${!isPriceTypeDisabled ? `
+                                        <label>価格タイプ</label>
+                                        <div class="price-type-buttons">
+                                            <button class="price-type-button ${item.first ? 'active' : ''}" 
+                                                    id="first_${itemId}" 
+                                                    onclick="setPriceType('${itemId}', 'first')"
+                                                    ${!item.first ? 'disabled' : ''}>
+                                                初回価格${item.first ? ` ¥${item.first.toLocaleString()}` : ''}
+                                            </button>
+                                            <button class="price-type-button ${!item.first ? 'active' : ''}" 
+                                                    id="regular_${itemId}" 
+                                                    onclick="setPriceType('${itemId}', 'regular')">
+                                                通常価格 ¥${item.regular.toLocaleString()}
+                                            </button>
+                                        </div>
+                                        ` : `
+                                        <label>価格</label>
+                                        <div style="font-size: 16px; padding: 10px 0;">
+                                            通常価格のみ
+                                        </div>
+                                        `}
+                                    </div>
+                                    <div class="price-display" id="display_${itemId}">
+                                        ¥${(item.first || item.regular).toLocaleString()}
+                                    </div>
+                                </div>
+                                ${!isDiscountDisabled ? `
+                                <div class="control-group">
+                                    <label>割引適用</label>
+                                    <div class="discount-checkboxes">
+                                        <div class="discount-checkbox" id="weekday_wrapper_${itemId}">
+                                            <input type="checkbox" id="weekday_${itemId}" onchange="updateItemPrice('${itemId}', 'weekday')">
+                                            <label for="weekday_${itemId}">平日2200円OFF</label>
+                                        </div>
+                                        <div class="discount-checkbox" id="line_wrapper_${itemId}">
+                                            <input type="checkbox" id="line_${itemId}" onchange="updateItemPrice('${itemId}', 'line')">
+                                            <label for="line_${itemId}">LINE</label>
+                                        </div>
+                                        ${showRepeatDiscount ? `
+                                        <div class="discount-checkbox" id="repeat_wrapper_${itemId}">
+                                            <input type="checkbox" id="repeat_${itemId}" onchange="updateItemPrice('${itemId}', 'repeat')">
+                                            <label for="repeat_${itemId}">リピート</label>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            });
+            
+            menuListDiv.innerHTML = html;
+        }
+
+        function toggleMenu(itemId, menuName) {
+            const checkbox = document.getElementById(itemId);
+            const menuItem = document.getElementById(`item_${itemId}`);
+            
+            if (checkbox.checked) {
+                menuItem.classList.add('selected');
+                const menuInfo = menuData.find(item => item.name === menuName);
+                selectedMenus[itemId] = {
+                    name: menuName,
+                    ...menuInfo,
+                    selectedPriceType: menuInfo.first ? 'first' : 'regular'
+                };
+                updateItemPrice(itemId);
+            } else {
+                menuItem.classList.remove('selected');
+                
+                // 平日割引が適用されていた場合は解除
+                if (selectedMenus[itemId] && selectedMenus[itemId].hasWeekdayDiscount) {
+                    hasWeekdayDiscount = false;
+                }
+                
+                // LINEクーポンが適用されていた場合は解除
+                if (selectedMenus[itemId] && selectedMenus[itemId].hasLineDiscount) {
+                    hasLineDiscount = false;
+                }
+                
+                delete selectedMenus[itemId];
+            }
+            
+            updateSummary();
+            updateWeekdayDiscountAvailability();
+            updateLineDiscountAvailability();
+            checkSetMenuCombination();
+        }
+
+        function setPriceType(itemId, priceType) {
+            if (!selectedMenus[itemId]) return;
+            
+            const firstButton = document.getElementById(`first_${itemId}`);
+            const regularButton = document.getElementById(`regular_${itemId}`);
+            
+            if (priceType === 'first' && !firstButton.disabled) {
+                firstButton.classList.add('active');
+                regularButton.classList.remove('active');
+                selectedMenus[itemId].selectedPriceType = 'first';
+            } else {
+                regularButton.classList.add('active');
+                firstButton.classList.remove('active');
+                selectedMenus[itemId].selectedPriceType = 'regular';
+            }
+            
+            updateItemPrice(itemId);
+            updateWeekdayDiscountAvailability();
+            updateLineDiscountAvailability();
+            
+            // セットメニューの価格タイプ変更時もチェック
+            const menu = selectedMenus[itemId];
+            if (menu && (menu.name === 'ハイドラジェントル' || menu.name === 'メソナJ')) {
+                checkSetMenuCombination();
+            }
+        }
+
+        function updateItemPrice(itemId, discountType) {
+            if (!selectedMenus[itemId]) return;
+            
+            const menu = selectedMenus[itemId];
+            const weekdayCheckbox = document.getElementById(`weekday_${itemId}`);
+            const lineCheckbox = document.getElementById(`line_${itemId}`);
+            
+            // 平日割引とLINEクーポンの排他制御
+            if (discountType === 'weekday' && weekdayCheckbox.checked) {
+                lineCheckbox.checked = false;
+                if (menu.hasLineDiscount) {
+                    hasLineDiscount = false;
+                    menu.hasLineDiscount = false;
+                }
+                // リピート割引も解除（併用不可）
+                const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+                if (repeatCheckbox) {
+                    repeatCheckbox.checked = false;
+                }
+                
+                // 他の施術の平日割引とLINEクーポンを解除
+                Object.keys(selectedMenus).forEach(id => {
+                    if (id !== itemId) {
+                        if (selectedMenus[id].hasWeekdayDiscount) {
+                            document.getElementById(`weekday_${id}`).checked = false;
+                            selectedMenus[id].hasWeekdayDiscount = false;
+                        }
+                        // LINEクーポンも解除（平日割引との併用不可）
+                        const otherLineCheckbox = document.getElementById(`line_${id}`);
+                        if (otherLineCheckbox && otherLineCheckbox.checked) {
+                            otherLineCheckbox.checked = false;
+                            selectedMenus[id].hasLineDiscount = false;
+                            hasLineDiscount = false;
+                        }
+                    }
+                });
+                
+                hasWeekdayDiscount = true;
+                menu.hasWeekdayDiscount = true;
+            } else if (discountType === 'line' && lineCheckbox.checked) {
+                weekdayCheckbox.checked = false;
+                if (menu.hasWeekdayDiscount) {
+                    hasWeekdayDiscount = false;
+                    menu.hasWeekdayDiscount = false;
+                }
+                // リピート割引も解除（併用不可）
+                const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+                if (repeatCheckbox) {
+                    repeatCheckbox.checked = false;
+                }
+                
+                // 他の施術のLINEクーポンと平日割引を解除
+                Object.keys(selectedMenus).forEach(id => {
+                    if (id !== itemId) {
+                        if (selectedMenus[id].hasLineDiscount) {
+                            const otherLineCheckbox = document.getElementById(`line_${id}`);
+                            if (otherLineCheckbox) {
+                                otherLineCheckbox.checked = false;
+                                selectedMenus[id].hasLineDiscount = false;
+                            }
+                        }
+                        // 平日割引も解除（LINEクーポンとの併用不可）
+                        const otherWeekdayCheckbox = document.getElementById(`weekday_${id}`);
+                        if (otherWeekdayCheckbox && otherWeekdayCheckbox.checked) {
+                            otherWeekdayCheckbox.checked = false;
+                            selectedMenus[id].hasWeekdayDiscount = false;
+                            hasWeekdayDiscount = false;
+                        }
+                    }
+                });
+                
+                hasLineDiscount = true;
+                menu.hasLineDiscount = true;
+            } else if (discountType === 'repeat' && document.getElementById(`repeat_${itemId}`).checked) {
+                // リピート割引選択時は平日割引とLINEクーポンを解除
+                weekdayCheckbox.checked = false;
+                lineCheckbox.checked = false;
+                if (menu.hasWeekdayDiscount) {
+                    hasWeekdayDiscount = false;
+                    menu.hasWeekdayDiscount = false;
+                }
+                if (menu.hasLineDiscount) {
+                    hasLineDiscount = false;
+                    menu.hasLineDiscount = false;
+                }
+                
+                // リピート割引選択時は自動的に初回価格を選択
+                if (menu.first) {
+                    setPriceType(itemId, 'first');
+                }
+            }
+            
+            // 平日割引のチェックが外された場合
+            if (discountType === 'weekday' && !weekdayCheckbox.checked && menu.hasWeekdayDiscount) {
+                hasWeekdayDiscount = false;
+                menu.hasWeekdayDiscount = false;
+            }
+            
+            // LINEクーポンのチェックが外された場合
+            if (discountType === 'line' && !lineCheckbox.checked && menu.hasLineDiscount) {
+                hasLineDiscount = false;
+                menu.hasLineDiscount = false;
+            }
+            
+            const priceDisplay = document.getElementById(`display_${itemId}`);
+            
+            let price = menu.selectedPriceType === 'first' && menu.first ? menu.first : menu.regular;
+            
+            let discounts = [];
+            
+            // セット価格の場合は先に処理して、他の処理をスキップ
+            if (menu.isSetPrice) {
+                price = menu.setPrice;
+                if (menu.setPrice === 0) {
+                    discounts.push('セット価格適用（メソナJ分）');
+                } else {
+                    discounts.push('セット価格適用');
+                }
+                
+                // セット価格にLINEクーポンを適用する場合
+                if (lineCheckbox && lineCheckbox.checked && menu.setMenuType === 'regular') {
+                    const setMenu = menuData.find(item => item.name === 'ハイドラ＋メソナJ');
+                    if (setMenu && setMenu.first) {
+                        if (menu.name === 'ハイドラジェントル') {
+                            price = setMenu.first;
+                            discounts = ['セット価格適用（LINE初回価格）'];
+                        } else if (menu.name === 'メソナJ') {
+                            price = 0;
+                            discounts = ['セット価格適用（メソナJ分・LINE初回価格）'];
+                        }
+                    }
+                }
+                
+                // セット価格の場合は他の処理をスキップ
+                menu.currentPrice = price;
+                menu.discounts = discounts;
+                priceDisplay.textContent = `¥${price.toLocaleString()}`;
+                updateSummary();
+                updateWeekdayDiscountAvailability();
+                updateLineDiscountAvailability();
+                return;
+            }
+            
+            // 通常のLINEクーポンの適用（通常価格→初回価格にする）
+            if (lineCheckbox && lineCheckbox.checked && menu.selectedPriceType === 'regular' && menu.first) {
+                price = menu.first;
+                discounts.push('LINE（初回価格適用）');
+            } else if (lineCheckbox && lineCheckbox.checked && menu.selectedPriceType === 'regular' && !menu.first) {
+                // 初回価格がない場合はLINEクーポンを無効化
+                lineCheckbox.checked = false;
+            }
+            
+            // 平日割引の適用（初回価格・LINE適用時は無効、通常価格13,200円以上のみ）
+            if (weekdayCheckbox && weekdayCheckbox.checked && 
+                menu.selectedPriceType === 'regular' && 
+                !lineCheckbox.checked &&
+                menu.regular >= 13200) {
+                price -= 2200;
+                discounts.push('平日割引');
+            } else if (weekdayCheckbox && weekdayCheckbox.checked) {
+                // 条件を満たさない場合はチェックを外す
+                weekdayCheckbox.checked = false;
+                if (menu.hasWeekdayDiscount) {
+                    hasWeekdayDiscount = false;
+                    menu.hasWeekdayDiscount = false;
+                }
+            }
+            
+            const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+            if (repeatCheckbox && repeatCheckbox.checked) {
+                // リピート割引の適用（平日割引・LINEクーポンとの併用不可）
+                if (!weekdayCheckbox.checked && !lineCheckbox.checked) {
+                    // リピート割引は初回価格を適用
+                    if (menu.first && menu.selectedPriceType === 'regular') {
+                        price = menu.first;
+                    }
+                    discounts.push('リピート（初回価格適用）');
+                } else {
+                    // 他の割引が選択されている場合はリピート割引を解除
+                    repeatCheckbox.checked = false;
+                }
+            }
+            
+            if (price < 0) price = 0;
+            
+            menu.currentPrice = price;
+            menu.discounts = discounts;
+            
+            priceDisplay.textContent = `¥${price.toLocaleString()}`;
+            updateSummary();
+            updateWeekdayDiscountAvailability();
+            updateLineDiscountAvailability();
+            checkSetMenuCombination();
+        }
+
+        function updateWeekdayDiscountAvailability() {
+            Object.keys(selectedMenus).forEach(itemId => {
+                const menu = selectedMenus[itemId];
+                const weekdayCheckbox = document.getElementById(`weekday_${itemId}`);
+                const weekdayWrapper = document.getElementById(`weekday_wrapper_${itemId}`);
+                const lineCheckbox = document.getElementById(`line_${itemId}`);
+                const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+                
+                // 平日割引の無効化条件
+                const shouldDisable = 
+                    // 初回価格選択時
+                    menu.selectedPriceType === 'first' ||
+                    // 通常価格が13,200円未満
+                    menu.regular < 13200 ||
+                    // LINEクーポンが選択されている（LINEは初回価格適用のため）
+                    lineCheckbox.checked ||
+                    // 既に他の施術で平日割引が使われている
+                    (hasWeekdayDiscount && !menu.hasWeekdayDiscount) ||
+                    // LINEクーポンが他の施術で使われている（併用不可）
+                    hasLineDiscount ||
+                    // リピート割引が選択されている（併用不可）
+                    (repeatCheckbox && repeatCheckbox.checked);
+                
+                weekdayCheckbox.disabled = shouldDisable;
+                weekdayWrapper.classList.toggle('disabled', shouldDisable);
+                
+                if (shouldDisable && weekdayCheckbox.checked) {
+                    weekdayCheckbox.checked = false;
+                    updateItemPrice(itemId);
+                }
+                
+                // リピート割引の無効化条件（平日割引・LINEとの併用不可）
+                if (repeatCheckbox) {
+                    const repeatWrapper = document.getElementById(`repeat_wrapper_${itemId}`);
+                    const shouldDisableRepeat = weekdayCheckbox.checked || lineCheckbox.checked || hasWeekdayDiscount || hasLineDiscount;
+                    
+                    repeatCheckbox.disabled = shouldDisableRepeat;
+                    if (repeatWrapper) {
+                        repeatWrapper.classList.toggle('disabled', shouldDisableRepeat);
+                    }
+                    
+                    if (shouldDisableRepeat && repeatCheckbox.checked) {
+                        repeatCheckbox.checked = false;
+                        updateItemPrice(itemId);
+                    }
+                }
+            });
+        }
+
+        function updateLineDiscountAvailability() {
+            Object.keys(selectedMenus).forEach(itemId => {
+                const menu = selectedMenus[itemId];
+                const lineCheckbox = document.getElementById(`line_${itemId}`);
+                const lineWrapper = document.getElementById(`line_wrapper_${itemId}`);
+                
+                if (!lineCheckbox) return; // クールスカルプティングなど割引なしの場合
+                
+                // LINEクーポンの無効化条件: 
+                // 初回価格選択時、初回価格が存在しない場合、既に他の施術でLINE割引が使われている、
+                // または平日割引が使われている（併用不可）、リピート割引が選択されている
+                const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+                const shouldDisable = 
+                    menu.selectedPriceType === 'first' || 
+                    !menu.first ||
+                    (hasLineDiscount && !menu.hasLineDiscount) ||
+                    hasWeekdayDiscount ||
+                    (repeatCheckbox && repeatCheckbox.checked);
+                
+                lineCheckbox.disabled = shouldDisable;
+                if (lineWrapper) {
+                    lineWrapper.classList.toggle('disabled', shouldDisable);
+                }
+                
+                if (shouldDisable && lineCheckbox.checked) {
+                    lineCheckbox.checked = false;
+                    updateItemPrice(itemId);
+                }
+            });
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('selectedSummary');
+            const selectedCount = document.getElementById('selectedCount');
+            const selectedTotal = document.getElementById('selectedTotal');
+            const weekdayWarning = document.getElementById('weekdayWarning');
+            
+            const count = Object.keys(selectedMenus).length;
+            
+            if (count === 0) {
+                summaryDiv.style.display = 'none';
+                return;
+            }
+            
+            let total = 0;
+            let hasWeekdayDiscountApplied = false;
+            let hasLineDiscountApplied = false;
+            
+            Object.values(selectedMenus).forEach(menu => {
+                total += menu.currentPrice || 0;
+                if (menu.hasWeekdayDiscount) {
+                    hasWeekdayDiscountApplied = true;
+                }
+                if (menu.hasLineDiscount) {
+                    hasLineDiscountApplied = true;
+                }
+            });
+            
+            summaryDiv.style.display = 'block';
+            selectedCount.textContent = count;
+            selectedTotal.textContent = `合計: ¥${total.toLocaleString()}`;
+            
+            const discountWarning = document.getElementById('discountWarning');
+            let warningText = '';
+            
+            if (hasWeekdayDiscountApplied && hasLineDiscountApplied) {
+                // この状態にはならないはずだが念のため
+                warningText = '⚠️ エラー: 平日割引とLINEクーポンは併用できません';
+            } else if (hasWeekdayDiscountApplied) {
+                warningText = '⚠️ 平日割引適用中（1施術のみ・LINEクーポンとの併用不可）';
+            } else if (hasLineDiscountApplied) {
+                warningText = '⚠️ LINEクーポン適用中（1施術のみ・通常→初回価格・平日割引との併用不可）';
+            }
+            
+            discountWarning.innerHTML = warningText;
+            discountWarning.style.display = warningText ? 'block' : 'none';
+        }
+
+        function calculatePrice() {
+            if (Object.keys(selectedMenus).length === 0) {
+                alert('施術メニューを選択してください');
+                return;
+            }
+            
+            // セット価格の最終確認
+            checkSetMenuCombination();
+            
+            const resultDiv = document.getElementById('result');
+            const detailsDiv = document.getElementById('priceDetails');
+            const finalPriceSpan = document.getElementById('finalPrice');
+            
+            let html = '<h4>施術内訳</h4>';
+            let totalPrice = 0;
+            let weekdayDiscountApplied = false;
+            
+            Object.entries(selectedMenus).forEach(([itemId, menu]) => {
+                // セット価格が適用されている場合は、その価格を使用
+                let displayPrice = menu.currentPrice;
+                if (menu.isSetPrice) {
+                    displayPrice = menu.setPrice;
+                }
+                
+                const basePrice = menu.selectedPriceType === 'first' && menu.first ? menu.first : menu.regular;
+                html += `
+                    <div class="price-item">
+                        <div>
+                            <span>${menu.name}</span>
+                            <div class="price-item-detail">
+                                ${menu.selectedPriceType === 'first' ? '初回価格' : '通常価格'}
+                                ${menu.discounts.length > 0 ? ' - 割引: ' + menu.discounts.join(', ') : ''}
+                            </div>
+                        </div>
+                        <span>¥${displayPrice.toLocaleString()}</span>
+                    </div>
+                `;
+                totalPrice += displayPrice;
+                
+                if (menu.discounts.includes('平日割引')) {
+                    weekdayDiscountApplied = true;
+                }
+            });
+            
+            if (weekdayDiscountApplied) {
+                html += `
+                    <div class="price-item" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
+                        <span style="color: #d81b60;">平日割引適用済み</span>
+                        <span style="color: #d81b60;">-¥2,200</span>
+                    </div>
+                `;
+            }
+            
+            detailsDiv.innerHTML = html;
+            finalPriceSpan.textContent = '¥' + totalPrice.toLocaleString();
+            resultDiv.style.display = 'block';
+        }
+
+        function checkSetMenuCombination() {
+            // ハイドラジェントルとメソナJの両方が選択されているかチェック
+            let hasHydra = false;
+            let hasMesona = false;
+            let hydraItemId = null;
+            let mesonaItemId = null;
+            
+            Object.entries(selectedMenus).forEach(([itemId, menu]) => {
+                if (menu.name === 'ハイドラジェントル') {
+                    hasHydra = true;
+                    hydraItemId = itemId;
+                } else if (menu.name === 'メソナJ') {
+                    hasMesona = true;
+                    mesonaItemId = itemId;
+                }
+            });
+            
+            if (hasHydra && hasMesona) {
+                // セット価格に変更
+                const setMenu = menuData.find(item => item.name === 'ハイドラ＋メソナJ');
+                
+                if (hydraItemId && setMenu) {
+                    const hydraMenu = selectedMenus[hydraItemId];
+                    const mesonaMenu = selectedMenus[mesonaItemId];
+                    
+                    // どちらも初回価格の場合のみ初回セット価格を適用
+                    const bothFirst = hydraMenu.selectedPriceType === 'first' && mesonaMenu.selectedPriceType === 'first';
+                    
+                    // LINEクーポンが適用されている場合もチェック
+                    const hydraHasLine = document.getElementById(`line_${hydraItemId}`) && document.getElementById(`line_${hydraItemId}`).checked;
+                    const mesonaHasLine = document.getElementById(`line_${mesonaItemId}`) && document.getElementById(`line_${mesonaItemId}`).checked;
+                    const hasLineDiscount = hydraHasLine || mesonaHasLine;
+                    
+                    // 両方初回、またはLINEクーポン適用時は初回セット価格
+                    const useFirstPrice = (bothFirst || (hasLineDiscount && hydraMenu.selectedPriceType === 'regular' && mesonaMenu.selectedPriceType === 'regular'));
+                    const setPrice = useFirstPrice && setMenu.first ? setMenu.first : setMenu.regular;
+                    
+                    // ハイドラの価格をセット価格に変更
+                    hydraMenu.isSetPrice = true;
+                    hydraMenu.originalPrice = hydraMenu.currentPrice;
+                    hydraMenu.setPrice = setPrice;
+                    hydraMenu.setMenuType = useFirstPrice ? 'first' : 'regular';
+                    
+                    // メソナJの価格を0円に
+                    mesonaMenu.isSetPrice = true;
+                    mesonaMenu.originalPrice = mesonaMenu.currentPrice;
+                    mesonaMenu.setPrice = 0;
+                    mesonaMenu.setMenuType = useFirstPrice ? 'first' : 'regular';
+                    
+                    // 価格を再計算
+                    updateItemPrice(hydraItemId);
+                    updateItemPrice(mesonaItemId);
+                }
+            } else {
+                // セット価格を解除
+                Object.entries(selectedMenus).forEach(([itemId, menu]) => {
+                    if (menu.isSetPrice) {
+                        menu.isSetPrice = false;
+                        delete menu.originalPrice;
+                        delete menu.setPrice;
+                        updateItemPrice(itemId);
+                    }
+                });
+            }
+        }
+
+        window.onload = function() {
+            initializeMenuList();
+        };
+    </script>
+</body>
+</html>
