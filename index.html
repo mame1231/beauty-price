@@ -17,6 +17,7 @@
             color: #333;
             background-color: #f8f9fa;
             padding: 20px;
+            padding-bottom: 80px; /* 固定バーのスペースを確保 */
         }
         
         .container {
@@ -209,7 +210,57 @@
         }
         
         .discount-checkbox.disabled {
-            opacity: 0.5;
+            opacity: 0.5 !important;
+            color: #999 !important;
+            background-color: #f5f5f5 !important;
+        }
+        
+        .discount-checkbox.disabled input[type="checkbox"] {
+            opacity: 0.5 !important;
+            pointer-events: none !important;
+        }
+        
+        .discount-checkbox.disabled span {
+            opacity: 0.5 !important;
+            color: #999 !important;
+        }
+        
+        .final-total-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #d81b60;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .final-total-text {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .detail-button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: normal;
+        }
+        
+        .detail-button:hover {
+            background: rgba(255,255,255,0.3);
         }
         
         .discount-checkbox label {
@@ -224,6 +275,10 @@
             background: #e8f5e9;
             border-radius: 5px;
             border: 1px solid #4caf50;
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
         .selected-summary-title {
@@ -297,26 +352,202 @@
             background: #fff3e0;
             border-radius: 5px;
         }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            background: #f5f5f5;
+            color: #666;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s;
+            margin-bottom: -2px;
+        }
+        
+        .tab-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .tab-button.active {
+            background: white;
+            color: #d81b60;
+            border: 2px solid #ddd;
+            border-bottom: 2px solid white;
+        }
+        
+        .tab-button.active.hair-removal-active {
+            color: #1976d2;
+        }
+        
+        /* 脱毛セクション用のスタイル */
+        #hair-removal-content .menu-category-title {
+            color: #1976d2;
+        }
+        
+        #hair-removal-content .price-type-button.active {
+            background: #1976d2;
+            border-color: #1976d2;
+        }
+        
+        #hair-removal-content .menu-item.selected {
+            background: #e3f2fd;
+            border-color: #1976d2;
+        }
+        
+        #hair-removal-content .button {
+            background: #1976d2;
+        }
+        
+        #hair-removal-content .button:hover {
+            background: #1565c0;
+        }
+        
+        #hair-removal-content .result {
+            background: #e8f4f8;
+            border-color: #1976d2;
+        }
+        
+        #hair-removal-content .final-price {
+            color: #1976d2;
+            border-top-color: #1976d2;
+        }
+        
+        #hair-removal-content .price-display {
+            color: #1976d2;
+        }
+        
+        #hair-removal-content .selected-summary {
+            background: #e3f2fd;
+            border-color: #42a5f5;
+        }
+        
+        #hair-removal-content .selected-summary-title {
+            color: #1565c0;
+        }
+        
+        .tab-content {
+            padding-top: 20px;
+        }
+        
+        /* 選択アイテム関連のスタイル */
+        .selection-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .selection-item-info {
+            flex: 1;
+        }
+        
+        .selection-item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .selection-item-options {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .selection-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quantity-button {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #1976d2;
+            background: white;
+            color: #1976d2;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quantity-button:hover {
+            background: #e3f2fd;
+        }
+        
+        .quantity-display {
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .remove-button {
+            color: #f44336;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px 8px;
+            transition: all 0.2s;
+        }
+        
+        .remove-button:hover {
+            background: #ffebee;
+            border-radius: 3px;
+            transform: scale(1.1);
+        }
+        
+        .add-to-selection-button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .add-to-selection-button:hover {
+            background: #1565c0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>美容皮膚科 料金計算アプリ</h1>
         
+        <div class="tabs">
+            <button class="tab-button active" onclick="toggleTab('beauty')">美容施術</button>
+            <button class="tab-button" onclick="toggleTab('hair-removal')">脱毛</button>
+        </div>
+        
+        
+        
+        <div id="beauty-content" class="tab-content active">
         <div class="form-group">
             <label>施術メニューを選択（複数選択可）</label>
             <div class="menu-list" id="menuList">
             </div>
         </div>
-        
-        <div class="selected-summary" id="selectedSummary" style="display: none;">
-            <div class="selected-summary-title">選択中の施術: <span id="selectedCount">0</span>件</div>
-            <div id="selectedTotal">合計: ¥0</div>
-            <div class="weekday-discount-warning" id="discountWarning" style="display: none;">
-            </div>
-        </div>
-        
-        <button class="button" onclick="calculatePrice()">詳細な料金を計算</button>
         
         <div id="result" class="result" style="display: none;">
             <h3>計算結果</h3>
@@ -324,6 +555,59 @@
             <div class="final-price">
                 合計金額: <span id="finalPrice">¥0</span>
             </div>
+            <button class="button" onclick="resetAll()" style="background: #757575; margin-top: 15px;">
+                リセット
+            </button>
+        </div>
+        </div>
+        
+        <div id="hair-removal-content" class="tab-content" style="display: none;">
+            <div class="form-group">
+                <label>脱毛メニュー一覧</label>
+                <div class="menu-list" id="hairRemovalMenuList">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>選択中の施術</label>
+                <div class="selection-container" id="hairRemovalSelection" style="border: 2px solid #1976d2; border-radius: 5px; padding: 15px; min-height: 100px;">
+                    <div id="emptySelectionMessage" style="text-align: center; color: #999; padding: 20px;">
+                        施術が選択されていません
+                    </div>
+                    <div id="selectionItems" style="display: none;">
+                    </div>
+                    <div class="selection-summary" id="selectionSummary" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                        <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                            <span>合計: <span id="selectionTotalCount">0</span>件</span>
+                            <span style="color: #1976d2; font-size: 18px;">¥<span id="selectionTotalPrice">0</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div id="hairRemovalResult" class="result" style="display: none;">
+                <h3>計算結果</h3>
+                <div id="hairRemovalPriceDetails"></div>
+                <div class="final-price">
+                    合計金額: <span id="hairRemovalFinalPrice">¥0</span>
+                </div>
+                <button class="button" onclick="resetHairRemoval()" style="background: #757575; margin-top: 15px;">
+                    リセット
+                </button>
+            </div>
+        </div>
+        
+        <!-- 統合された詳細表示 -->
+        <div id="combinedResult" class="result" style="display: none;">
+            <h3>詳細な料金計算</h3>
+            <div id="combinedPriceDetails"></div>
+            <div class="final-price">
+                合計金額: <span id="combinedFinalPrice">¥0</span>
+            </div>
+            <button class="button" onclick="resetAll()" style="background: #757575; margin-top: 15px;">
+                リセット
+            </button>
         </div>
     </div>
 
@@ -373,6 +657,60 @@
         let selectedMenus = {};
         let hasWeekdayDiscount = false;
         let hasLineDiscount = false;
+        
+        // 脱毛メニューのデータ
+        const hairRemovalMenuData = {
+            female: {
+                全身脱毛: [
+                    { name: "両わき・ひじ下・ひざ下", first: 11000, regular: 22000, noon: 11000 },
+                    { name: "腕、足、脇", first: 16500, regular: 33000, noon: 22000 },
+                    { name: "全身脱毛バリューコース", first: 27500, regular: 55000, noon: 44000, note: "腕、足、体幹（顔、うなじ、VIO除く）" },
+                    { name: "全身脱毛", first: 38500, regular: 77000, noon: 55000, note: "顔、うなじ、VIOを含む全身" }
+                ],
+                部分脱毛: [
+                    { name: "SSパーツ", first: 2200, regular: 4400, parts: ["ワキ", "手の甲と指", "足背と足趾", "耳"] },
+                    { name: "Sパーツ", first: 2750, regular: 5500, parts: ["うなじ", "首", "おでこ", "ほほ", "ひざ"] },
+                    { name: "Mパーツ", first: 8250, regular: 16500, parts: ["顔（女性）", "ひじ上", "ひじ下", "Vライン", "Iライン", "Oライン"] },
+                    { name: "Lパーツ", first: 11000, regular: 22000, parts: ["胸部", "腹部", "ひざ上", "ひざ下"] },
+                    { name: "LLパーツ", first: 13200, regular: 26400, parts: ["腕全部（脇含まない）", "脚全部", "背中", "VIO"] }
+                ]
+            },
+            male: {
+                全身脱毛: [
+                    { name: "両わき・ひじ下・ひざ下", first: 12000, regular: 24000, noon: 12000 },
+                    { name: "腕、足、脇", first: 18000, regular: 36000, noon: 25000 },
+                    { name: "全身脱毛バリューコース", first: 33000, regular: 66000, noon: 55000, note: "腕、足、体幹（顔、うなじ、VIO除く）" }
+                ],
+                部分脱毛: [
+                    { name: "SSパーツ", first: 2200, regular: 4400, parts: ["ワキ", "手の甲と指", "足背と足趾", "耳"] },
+                    { name: "Sパーツ", first: 2750, regular: 5500, parts: ["うなじ", "首", "おでこ", "ほほ", "ひざ"] },
+                    { name: "Mパーツ", first: 8250, regular: 16500, parts: ["ひげ（麻酔込み）", "ひじ上", "ひじ下"] },
+                    { name: "Lパーツ", first: 11000, regular: 22000, parts: ["胸部", "腹部", "ひざ上", "ひざ下", "顔（男性、半顔、麻酔込み）"] },
+                    { name: "LLパーツ", first: 13200, regular: 26400, parts: ["腕全部（脇含まない）", "脚全部", "背中"] }
+                ]
+            },
+            学生割引: {
+                female: [
+                    { name: "両わき・ひじ下・ひざ下", regular: 11000, fiveTimes: 55000 },
+                    { name: "腕、足、脇", regular: 16500, fiveTimes: 82500 },
+                    { name: "全身脱毛バリューコース", regular: 27500, fiveTimes: 137500 }
+                ],
+                male: [
+                    { name: "両わき・ひじ下・ひざ下", regular: 12000, fiveTimes: 60000 },
+                    { name: "腕、足、脇", regular: 18000, fiveTimes: 90000 },
+                    { name: "全身脱毛バリューコース", regular: 33000, fiveTimes: 165000 }
+                ]
+            },
+            その他: [
+                { name: "1ショット", regular: 660 },
+                { name: "剃毛（1部位）", regular: 2200 },
+                { name: "麻酔（1部位）", regular: 1100 }
+            ]
+        };
+        
+        // 脱毛選択システム用の変数
+        let hairRemovalSelection = []; // 選択アイテムの配列
+        let hairRemovalSelectionId = 0; // 選択アイテムのユニークID
 
         function initializeMenuList() {
             const menuListDiv = document.getElementById('menuList');
@@ -794,50 +1132,43 @@
         }
 
         function updateSummary() {
-            const summaryDiv = document.getElementById('selectedSummary');
-            const selectedCount = document.getElementById('selectedCount');
-            const selectedTotal = document.getElementById('selectedTotal');
-            const weekdayWarning = document.getElementById('weekdayWarning');
+            // 美容施術の数
+            const beautyCount = Object.keys(selectedMenus).length;
+            // 脱毛の数
+            const hairRemovalCount = hairRemovalSelection.length;
+            const totalCount = beautyCount + hairRemovalCount;
             
-            const count = Object.keys(selectedMenus).length;
-            
-            if (count === 0) {
-                summaryDiv.style.display = 'none';
+            if (totalCount === 0) {
+                // 固定バーを非表示
+                const finalTotalBar = document.getElementById('finalTotalBar');
+                finalTotalBar.style.display = 'none';
                 return;
             }
             
-            let total = 0;
-            let hasWeekdayDiscountApplied = false;
-            let hasLineDiscountApplied = false;
+            let beautyTotal = 0;
+            let hairRemovalTotal = 0;
             
+            // 美容施術の合計
             Object.values(selectedMenus).forEach(menu => {
-                total += menu.currentPrice || 0;
-                if (menu.hasWeekdayDiscount) {
-                    hasWeekdayDiscountApplied = true;
-                }
-                if (menu.hasLineDiscount) {
-                    hasLineDiscountApplied = true;
-                }
+                beautyTotal += menu.currentPrice || 0;
             });
             
-            summaryDiv.style.display = 'block';
-            selectedCount.textContent = count;
-            selectedTotal.textContent = `合計: ¥${total.toLocaleString()}`;
+            // 脱毛の合計
+            hairRemovalSelection.forEach(item => {
+                hairRemovalTotal += (item.price * item.quantity) || 0;
+            });
             
-            const discountWarning = document.getElementById('discountWarning');
-            let warningText = '';
+            const total = beautyTotal + hairRemovalTotal;
             
-            if (hasWeekdayDiscountApplied && hasLineDiscountApplied) {
-                // この状態にはならないはずだが念のため
-                warningText = '⚠️ エラー: 平日割引とLINEクーポンは併用できません';
-            } else if (hasWeekdayDiscountApplied) {
-                warningText = '⚠️ 平日割引適用中（1施術のみ・LINEクーポンとの併用不可）';
-            } else if (hasLineDiscountApplied) {
-                warningText = '⚠️ LINEクーポン適用中（1施術のみ・通常→初回価格・平日割引との併用不可）';
+            // 固定バーを更新
+            const finalTotalBar = document.getElementById('finalTotalBar');
+            const finalTotalText = document.getElementById('finalTotalText');
+            if (total > 0) {
+                finalTotalText.textContent = `合計: ¥${total.toLocaleString()}`;
+                finalTotalBar.style.display = 'flex';
+            } else {
+                finalTotalBar.style.display = 'none';
             }
-            
-            discountWarning.innerHTML = warningText;
-            discountWarning.style.display = warningText ? 'block' : 'none';
         }
 
         function calculatePrice() {
@@ -964,9 +1295,833 @@
             }
         }
 
+        function resetAll() {
+            // すべてのチェックボックスをクリア
+            Object.keys(selectedMenus).forEach(itemId => {
+                const checkbox = document.getElementById(itemId);
+                if (checkbox) {
+                    checkbox.checked = false;
+                    const menuItem = document.getElementById(`item_${itemId}`);
+                    if (menuItem) {
+                        menuItem.classList.remove('selected');
+                    }
+                }
+            });
+            
+            // 選択メニューをクリア
+            selectedMenus = {};
+            hasWeekdayDiscount = false;
+            hasLineDiscount = false;
+            
+            // 脱毛選択もクリア
+            hairRemovalSelection = [];
+            updateSelectionDisplay();
+            
+            // サマリーを非表示
+            document.getElementById('selectedSummary').style.display = 'none';
+            
+            // 計算結果を非表示
+            document.getElementById('result').style.display = 'none';
+            
+            // 脱毛計算結果も非表示
+            const hairRemovalResult = document.getElementById('hairRemovalResult');
+            if (hairRemovalResult) {
+                hairRemovalResult.style.display = 'none';
+            }
+            
+            // 統合された詳細表示も非表示
+            const combinedResult = document.getElementById('combinedResult');
+            if (combinedResult) {
+                combinedResult.style.display = 'none';
+            }
+            
+            // すべての割引チェックボックスをリセット
+            const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+            allCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = false;
+            });
+            
+            // 価格タイプボタンをリセット
+            const allPriceButtons = document.querySelectorAll('.price-type-button');
+            allPriceButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 初回価格があるメニューは初回価格を選択状態に
+            menuData.forEach((item, index) => {
+                const itemId = `menu_${item.category.replace(/\s/g, '_')}_${index}`;
+                const firstButton = document.getElementById(`first_${itemId}`);
+                const regularButton = document.getElementById(`regular_${itemId}`);
+                if (firstButton && !firstButton.disabled) {
+                    firstButton.classList.add('active');
+                } else if (regularButton) {
+                    regularButton.classList.add('active');
+                }
+            });
+            
+            // 割引ラッパーのdisabledクラスを削除
+            const discountWrappers = document.querySelectorAll('.discount-checkbox');
+            discountWrappers.forEach(wrapper => {
+                wrapper.classList.remove('disabled');
+            });
+        }
+
+        function toggleTab(tabName) {
+            // 全てのタブボタンを非アクティブにする
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.classList.remove('active', 'hair-removal-active');
+            });
+            
+            // 全てのコンテンツを非表示にする
+            document.getElementById('beauty-content').style.display = 'none';
+            document.getElementById('hair-removal-content').style.display = 'none';
+            
+            // 選択されたタブをアクティブにする
+            event.target.classList.add('active');
+            
+            // 脱毛タブの場合は追加のクラスを付与
+            if (tabName === 'hair-removal') {
+                event.target.classList.add('hair-removal-active');
+            }
+            
+            // 選択されたコンテンツを表示
+            document.getElementById(tabName + '-content').style.display = 'block';
+            
+            // 脱毛メニューの初期化（初回のみ）
+            if (tabName === 'hair-removal' && !window.hairRemovalInitialized) {
+                initializeHairRemovalMenuList();
+                window.hairRemovalInitialized = true;
+            }
+        }
+
+        // 脱毛メニューの初期化
+        function initializeHairRemovalMenuList() {
+            const menuListDiv = document.getElementById('hairRemovalMenuList');
+            
+            let html = '';
+            
+            // 女性全身脱毛
+            html += '<h3 style="color: #1976d2; margin-top: 20px;">女性 - 全身脱毛</h3>';
+            html += `<div class="menu-category">`;
+            
+            hairRemovalMenuData.female.全身脱毛.forEach((item, index) => {
+                const itemId = `hair_female_full_${index}`;
+                html += createHairRemovalMenuItem(item, itemId, 'female', '全身脱毛', index);
+            });
+            
+            html += `</div>`;
+            
+            // 男性全身脱毛
+            html += '<h3 style="color: #1976d2; margin-top: 30px;">男性 - 全身脱毛</h3>';
+            html += `<div class="menu-category">`;
+            
+            hairRemovalMenuData.male.全身脱毛.forEach((item, index) => {
+                const itemId = `hair_male_full_${index}`;
+                html += createHairRemovalMenuItem(item, itemId, 'male', '全身脱毛', index);
+            });
+            
+            html += `</div>`;
+            
+            // 部分脱毛（男女共通）
+            html += '<h3 style="color: #1976d2; margin-top: 30px;">部分脱毛（男女共通）</h3>';
+            html += `<div class="menu-category">`;
+            
+            // 女性の部分脱毛データを使用（男女共通なので）
+            hairRemovalMenuData.female.部分脱毛.forEach((item, index) => {
+                const itemId = `hair_parts_${index}`;
+                html += createHairRemovalMenuItem(item, itemId, 'parts', '部分脱毛', index);
+            });
+            
+            html += `</div>`;
+            
+            // その他メニュー
+            html += '<h3 style="color: #1976d2; margin-top: 30px;">その他</h3>';
+            html += `<div class="menu-category">`;
+            
+            hairRemovalMenuData.その他.forEach((item, index) => {
+                const itemId = `hair_other_${index}`;
+                html += `
+                    <div class="menu-item" id="item_${itemId}">
+                        <div class="menu-item-header">
+                            <input type="checkbox" id="${itemId}" onchange="toggleHairRemovalMenu('${itemId}')">
+                            <label for="${itemId}" class="menu-item-name">${item.name}</label>
+                        </div>
+                        <div class="menu-item-controls">
+                            <div class="control-row">
+                                <div class="price-display" id="display_${itemId}">
+                                    ¥${item.regular.toLocaleString()}
+                                </div>
+                            </div>
+                            <button class="add-to-selection-button" onclick="addToSelection('other', 'その他', ${index})" style="margin-top: 10px;">
+                                選択に追加
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            
+            menuListDiv.innerHTML = html;
+        }
+        
+        // 脱毛メニューアイテムの作成
+        function createHairRemovalMenuItem(item, itemId, gender, category, index) {
+            return `
+                <div class="menu-item" id="item_${itemId}">
+                    <div class="menu-item-header">
+                        <input type="checkbox" id="${itemId}" onchange="toggleHairRemovalMenu('${itemId}')">
+                        <label for="${itemId}" class="menu-item-name">
+                            ${item.name}
+                            ${item.note ? `<span style="font-size: 12px; color: #666;"> - ${item.note}</span>` : ''}
+                        </label>
+                    </div>
+                    <div class="menu-item-controls">
+                        <div class="control-row">
+                            <div class="control-group">
+                                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                                    <div>
+                                        <span style="font-size: 14px; color: #666;">初回: </span>
+                                        <span style="font-weight: bold;">¥${item.first.toLocaleString()}</span>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 14px; color: #666;">通常: </span>
+                                        <span style="font-weight: bold;">¥${item.regular.toLocaleString()}</span>
+                                    </div>
+                                    ${item.noon ? `
+                                    <div>
+                                        <span style="font-size: 14px; color: #666;">昼割: </span>
+                                        <span style="font-weight: bold; color: #ff6b6b;">¥${item.noon.toLocaleString()}</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                ${item.parts ? `
+                                <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                                    含まれる部位: ${item.parts.join('、')}
+                                </div>
+                                ` : ''}
+                                <div style="margin-top: 10px;">
+                                    <label class="discount-checkbox" style="margin-right: 15px;" id="student_wrapper_${itemId}">
+                                        <input type="checkbox" id="student_${itemId}" onchange="updateHairRemovalDiscounts('${itemId}', '${gender}', '${category}', ${index})">
+                                        <span>学生割引</span>
+                                    </label>
+                                    <label class="discount-checkbox" style="margin-right: 15px;" id="line_wrapper_${itemId}">
+                                        <input type="checkbox" id="line_${itemId}" onchange="updateHairRemovalDiscounts('${itemId}', '${gender}', '${category}', ${index})">
+                                        <span>LINEクーポン</span>
+                                    </label>
+                                    ${gender !== 'parts' && item.noon ? `
+                                    <label class="discount-checkbox" style="margin-right: 15px;" id="noon_wrapper_${itemId}">
+                                        <input type="checkbox" id="noon_${itemId}" onchange="updateHairRemovalDiscounts('${itemId}', '${gender}', '${category}', ${index})">
+                                        <span>昼割（16時まで）</span>
+                                    </label>
+                                    ` : ''}
+                                    <label class="discount-checkbox" id="repeat_wrapper_${itemId}">
+                                        <input type="checkbox" id="repeat_${itemId}" onchange="updateHairRemovalDiscounts('${itemId}', '${gender}', '${category}', ${index})">
+                                        <span>11回目以降</span>
+                                    </label>
+                                    ${item.regular >= 13200 ? `
+                                    <label class="discount-checkbox" style="margin-right: 15px;" id="coupon_wrapper_${itemId}">
+                                        <input type="checkbox" id="coupon_${itemId}" onchange="updateHairRemovalDiscounts('${itemId}', '${gender}', '${category}', ${index})">
+                                        <span>2,200円OFFクーポン</span>
+                                    </label>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <button class="add-to-selection-button" onclick="addToSelection('${gender}', '${category}', ${index})" style="margin-top: 10px;">
+                            選択に追加
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 脱毛メニューの表示切り替え
+        function toggleHairRemovalMenu(itemId) {
+            const checkbox = document.getElementById(itemId);
+            const menuItem = document.getElementById(`item_${itemId}`);
+            
+            if (checkbox.checked) {
+                menuItem.classList.add('selected');
+            } else {
+                menuItem.classList.remove('selected');
+            }
+        }
+        
+        // 脱毛割引の更新と併用制御
+        function updateHairRemovalDiscounts(itemId, gender, category, index) {
+            let item;
+            if (gender === 'other') {
+                item = hairRemovalMenuData.その他[index];
+            } else if (gender === 'parts') {
+                item = hairRemovalMenuData.female.部分脱毛[index];
+            } else {
+                item = hairRemovalMenuData[gender][category][index];
+            }
+            
+            const studentCheckbox = document.getElementById(`student_${itemId}`);
+            const noonCheckbox = document.getElementById(`noon_${itemId}`);
+            const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+            const couponCheckbox = document.getElementById(`coupon_${itemId}`);
+            const lineCheckbox = document.getElementById(`line_${itemId}`);
+            
+            const studentWrapper = document.getElementById(`student_wrapper_${itemId}`);
+            const noonWrapper = document.getElementById(`noon_wrapper_${itemId}`);
+            const repeatWrapper = document.getElementById(`repeat_wrapper_${itemId}`);
+            const couponWrapper = document.getElementById(`coupon_wrapper_${itemId}`);
+            const lineWrapper = document.getElementById(`line_wrapper_${itemId}`);
+            
+            // LINEクーポンが選択された場合
+            if (lineCheckbox && lineCheckbox.checked) {
+                // 学生割引を無効化（併用不可）
+                if (studentCheckbox) {
+                    studentCheckbox.checked = false;
+                    studentCheckbox.disabled = true;
+                    studentWrapper.classList.add('disabled');
+                }
+                // 昼割を無効化（併用不可）
+                if (noonCheckbox) {
+                    noonCheckbox.checked = false;
+                    noonCheckbox.disabled = true;
+                    noonWrapper.classList.add('disabled');
+                }
+                // 11回目以降を無効化（併用不可）
+                if (repeatCheckbox) {
+                    repeatCheckbox.checked = false;
+                    repeatCheckbox.disabled = true;
+                    repeatWrapper.classList.add('disabled');
+                }
+                // 2,200円OFFクーポンを無効化（併用不可）
+                if (couponCheckbox && couponWrapper) {
+                    couponCheckbox.checked = false;
+                    couponCheckbox.disabled = true;
+                    couponWrapper.classList.add('disabled');
+                    console.log('LINE coupon selected - disabled 2200 yen coupon for item:', itemId, 'couponWrapper:', couponWrapper);
+                }
+            }
+            
+            // 学生割引が選択された場合
+            if (studentCheckbox && studentCheckbox.checked) {
+                // LINEクーポンを無効化（併用不可）
+                if (lineCheckbox) {
+                    lineCheckbox.checked = false;
+                    lineCheckbox.disabled = true;
+                    lineWrapper.classList.add('disabled');
+                }
+                // 2,200円OFFクーポンを無効化（併用不可）
+                if (couponCheckbox) {
+                    couponCheckbox.checked = false;
+                    couponCheckbox.disabled = true;
+                    couponWrapper.classList.add('disabled');
+                }
+                // 昼割を無効化（併用不可）
+                if (noonCheckbox) {
+                    noonCheckbox.checked = false;
+                    noonCheckbox.disabled = true;
+                    noonWrapper.classList.add('disabled');
+                }
+                // 11回目以降を無効化（同じ価格なので不要）
+                if (repeatCheckbox) {
+                    repeatCheckbox.checked = false;
+                    repeatCheckbox.disabled = true;
+                    repeatWrapper.classList.add('disabled');
+                }
+            }
+            
+            // 昼割が選択された場合
+            if (noonCheckbox && noonCheckbox.checked) {
+                // 学生割引を無効化（併用不可）
+                if (studentCheckbox) {
+                    studentCheckbox.checked = false;
+                    studentCheckbox.disabled = true;
+                    studentWrapper.classList.add('disabled');
+                }
+                // LINEクーポンを無効化（併用不可）
+                if (lineCheckbox) {
+                    lineCheckbox.checked = false;
+                    lineCheckbox.disabled = true;
+                    lineWrapper.classList.add('disabled');
+                }
+            }
+            
+            // 11回目以降が選択された場合
+            if (repeatCheckbox && repeatCheckbox.checked) {
+                // 学生割引を無効化（同じ価格なので不要）
+                if (studentCheckbox) {
+                    studentCheckbox.checked = false;
+                    studentCheckbox.disabled = true;
+                    studentWrapper.classList.add('disabled');
+                }
+                // LINEクーポンを無効化（併用不可）
+                if (lineCheckbox) {
+                    lineCheckbox.checked = false;
+                    lineCheckbox.disabled = true;
+                    lineWrapper.classList.add('disabled');
+                }
+            }
+            
+            // 2,200円OFFクーポンが選択された場合
+            if (couponCheckbox && couponCheckbox.checked) {
+                // 学生割引を無効化（併用不可）
+                if (studentCheckbox) {
+                    studentCheckbox.checked = false;
+                    studentCheckbox.disabled = true;
+                    studentWrapper.classList.add('disabled');
+                }
+                // LINEクーポンを無効化（併用不可）
+                if (lineCheckbox) {
+                    lineCheckbox.checked = false;
+                    lineCheckbox.disabled = true;
+                    lineWrapper.classList.add('disabled');
+                }
+            }
+            
+            // いずれの排他的な割引も選択されていない場合は全て有効化
+            if ((!studentCheckbox || !studentCheckbox.checked) && 
+                (!couponCheckbox || !couponCheckbox.checked) && 
+                (!noonCheckbox || !noonCheckbox.checked) &&
+                (!repeatCheckbox || !repeatCheckbox.checked) &&
+                (!lineCheckbox || !lineCheckbox.checked)) {
+                if (studentCheckbox) {
+                    studentCheckbox.disabled = false;
+                    studentWrapper.classList.remove('disabled');
+                }
+                if (noonCheckbox) {
+                    noonCheckbox.disabled = false;
+                    noonWrapper.classList.remove('disabled');
+                }
+                if (repeatCheckbox) {
+                    repeatCheckbox.disabled = false;
+                    repeatWrapper.classList.remove('disabled');
+                }
+                if (couponCheckbox) {
+                    couponCheckbox.disabled = false;
+                    couponWrapper.classList.remove('disabled');
+                }
+                if (lineCheckbox) {
+                    lineCheckbox.disabled = false;
+                    lineWrapper.classList.remove('disabled');
+                }
+            } else {
+                // LINEクーポンが選択されている場合の特別な処理
+                if (lineCheckbox && lineCheckbox.checked) {
+                    if (couponCheckbox && couponWrapper) {
+                        couponCheckbox.disabled = true;
+                        couponWrapper.classList.add('disabled');
+                    }
+                    if (studentCheckbox && studentWrapper) {
+                        studentCheckbox.disabled = true;
+                        studentWrapper.classList.add('disabled');
+                    }
+                    if (noonCheckbox && noonWrapper) {
+                        noonCheckbox.disabled = true;
+                        noonWrapper.classList.add('disabled');
+                    }
+                    if (repeatCheckbox && repeatWrapper) {
+                        repeatCheckbox.disabled = true;
+                        repeatWrapper.classList.add('disabled');
+                    }
+                }
+            }
+            
+            // 現在の選択状態で価格が13,200円未満になる場合はクーポンを無効化
+            if (couponCheckbox) {
+                let currentPrice = item.regular;
+                
+                if (noonCheckbox && noonCheckbox.checked && item.noon) {
+                    currentPrice = item.noon;
+                } else if (repeatCheckbox && repeatCheckbox.checked) {
+                    currentPrice = item.first;
+                }
+                
+                if (currentPrice < 13200) {
+                    couponCheckbox.checked = false;
+                    couponCheckbox.disabled = true;
+                    couponWrapper.classList.add('disabled');
+                } else if ((!studentCheckbox || !studentCheckbox.checked) && 
+                          (!noonCheckbox || !noonCheckbox.checked)) {
+                    couponCheckbox.disabled = false;
+                    couponWrapper.classList.remove('disabled');
+                }
+            }
+        }
+        
+        // 選択に追加
+        function addToSelection(gender, category, index) {
+            let item;
+            let itemId;
+            
+            if (gender === 'other') {
+                item = hairRemovalMenuData.その他[index];
+                itemId = `hair_other_${index}`;
+            } else if (gender === 'parts') {
+                // 部分脱毛は女性データを使用（男女共通）
+                item = hairRemovalMenuData.female.部分脱毛[index];
+                itemId = `hair_parts_${index}`;
+            } else {
+                item = hairRemovalMenuData[gender][category][index];
+                itemId = `hair_${gender}_full_${index}`;
+            }
+            
+            // 割引オプションの取得
+            const isStudent = document.getElementById(`student_${itemId}`)?.checked || false;
+            const isNoon = document.getElementById(`noon_${itemId}`)?.checked || false;
+            const isRepeat = document.getElementById(`repeat_${itemId}`)?.checked || false;
+            const isCoupon = document.getElementById(`coupon_${itemId}`)?.checked || false;
+            const isLine = document.getElementById(`line_${itemId}`)?.checked || false;
+            
+            // 価格の計算
+            let price;
+            let priceType;
+            let genderLabel = '';
+            
+            if (gender === 'other') {
+                if (isLine) {
+                    // LINEクーポン（通常価格→初回価格）
+                    price = item.first;
+                    priceType = 'LINEクーポン（初回価格）';
+                } else {
+                    price = item.regular;
+                    priceType = '通常価格';
+                }
+            } else if (gender === 'parts') {
+                // 部分脱毛の場合（性別なし）
+                if (isStudent) {
+                    price = Math.floor(item.regular / 2);
+                    priceType = '学生割引（50%OFF）';
+                } else if (isRepeat && isCoupon && item.first >= 13200) {
+                    // 11回目以降 + クーポン
+                    price = item.first - 2200;
+                    priceType = '11回目以降（初回価格） - 2,200円OFFクーポン';
+                } else if (isRepeat) {
+                    price = item.first;
+                    priceType = '11回目以降（初回価格）';
+                } else if (isCoupon && item.regular >= 13200) {
+                    // 通常価格からクーポン適用
+                    price = item.regular - 2200;
+                    priceType = '通常価格 - 2,200円OFFクーポン';
+                } else if (isLine) {
+                    // LINEクーポン（通常価格→初回価格）
+                    price = item.first;
+                    priceType = 'LINEクーポン（初回価格）';
+                } else {
+                    price = item.first;
+                    priceType = '初回価格';
+                }
+            } else {
+                genderLabel = gender === 'female' ? '女性' : '男性';
+                
+                if (isStudent) {
+                    // 学生割引の場合（クーポンとの併用不可）
+                    const studentData = hairRemovalMenuData.学生割引[gender].find(s => s.name === item.name);
+                    if (studentData) {
+                        price = studentData.regular;
+                        priceType = '学生割引';
+                    } else {
+                        price = Math.floor(item.regular / 2);
+                        priceType = '学生割引（50%OFF）';
+                    }
+                } else if (isRepeat && isCoupon && item.first >= 13200) {
+                    // 11回目以降 + クーポン
+                    price = item.first - 2200;
+                    priceType = '11回目以降（初回価格） - 2,200円OFFクーポン';
+                } else if (isRepeat) {
+                    price = item.first;
+                    priceType = '11回目以降（初回価格）';
+                } else if (isNoon && item.noon) {
+                    // 昼割価格
+                    if (isCoupon && item.noon >= 13200) {
+                        // 昼割 + クーポン（昼割価格が13,200円以上の場合のみ）
+                        price = item.noon - 2200;
+                        priceType = '昼割価格 - 2,200円OFFクーポン';
+                    } else {
+                        price = item.noon;
+                        priceType = '昼割価格';
+                    }
+                } else if (isCoupon && item.regular >= 13200) {
+                    // 通常価格からクーポン適用
+                    price = item.regular - 2200;
+                    priceType = '通常価格 - 2,200円OFFクーポン';
+                } else if (isLine) {
+                    // LINEクーポン（通常価格→初回価格）
+                    price = item.first;
+                    priceType = 'LINEクーポン（初回価格）';
+                } else {
+                    price = item.first;
+                    priceType = '初回価格';
+                }
+            }
+            
+            // 既に同じ条件のアイテムが選択されているかチェック
+            const existingItem = hairRemovalSelection.find(selectedItem => 
+                selectedItem.name === item.name &&
+                selectedItem.gender === genderLabel &&
+                selectedItem.priceType === priceType &&
+                selectedItem.price === price
+            );
+            
+            if (existingItem) {
+                // 既に存在する場合は数量を増やす
+                existingItem.quantity++;
+            } else {
+                // 新規追加
+                const selectionItem = {
+                    id: hairRemovalSelectionId++,
+                    name: item.name,
+                    gender: genderLabel,
+                    category: category,
+                    price: price,
+                    priceType: priceType,
+                    quantity: 1,
+                    baseItem: item,
+                    note: item.note,
+                    parts: item.parts
+                };
+                
+                hairRemovalSelection.push(selectionItem);
+            }
+            
+            updateSelectionDisplay();
+            updateSummary();
+            
+            // チェックボックスをリセット
+            if (document.getElementById(`student_${itemId}`)) {
+                document.getElementById(`student_${itemId}`).checked = false;
+            }
+            if (document.getElementById(`noon_${itemId}`)) {
+                document.getElementById(`noon_${itemId}`).checked = false;
+            }
+            if (document.getElementById(`repeat_${itemId}`)) {
+                document.getElementById(`repeat_${itemId}`).checked = false;
+            }
+            if (document.getElementById(`coupon_${itemId}`)) {
+                document.getElementById(`coupon_${itemId}`).checked = false;
+            }
+        }
+        
+        // 選択表示の更新
+        function updateSelectionDisplay() {
+            const emptyMessage = document.getElementById('emptySelectionMessage');
+            const selectionItems = document.getElementById('selectionItems');
+            const selectionSummary = document.getElementById('selectionSummary');
+            
+            if (hairRemovalSelection.length === 0) {
+                emptyMessage.style.display = 'block';
+                selectionItems.style.display = 'none';
+                selectionSummary.style.display = 'none';
+                return;
+            }
+            
+            emptyMessage.style.display = 'none';
+            selectionItems.style.display = 'block';
+            selectionSummary.style.display = 'block';
+            
+            let html = '';
+            let totalCount = 0;
+            let totalPrice = 0;
+            
+            hairRemovalSelection.forEach(item => {
+                totalCount += item.quantity;
+                totalPrice += item.price * item.quantity;
+                
+                html += `
+                    <div class="selection-item">
+                        <div class="selection-item-info">
+                            <div class="selection-item-name">
+                                ${item.gender ? item.gender + ' - ' : ''}${item.name}
+                            </div>
+                            <div class="selection-item-options">
+                                ${item.priceType} - ¥${item.price.toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="selection-item-controls">
+                            <div class="quantity-control">
+                                <button class="quantity-button" onclick="updateQuantity(${item.id}, -1)">−</button>
+                                <span class="quantity-display">${item.quantity}</span>
+                                <button class="quantity-button" onclick="updateQuantity(${item.id}, 1)">+</button>
+                            </div>
+                            <div class="remove-button" onclick="removeFromSelection(${item.id})" title="削除">🗑️</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            selectionItems.innerHTML = html;
+            document.getElementById('selectionTotalCount').textContent = totalCount;
+            document.getElementById('selectionTotalPrice').textContent = totalPrice.toLocaleString();
+        }
+        
+        // 数量の更新
+        function updateQuantity(selectionItemId, change) {
+            const item = hairRemovalSelection.find(i => i.id === selectionItemId);
+            if (!item) return;
+            
+            item.quantity += change;
+            if (item.quantity <= 0) {
+                removeFromSelection(selectionItemId);
+            } else {
+                updateSelectionDisplay();
+            }
+        }
+        
+        // 選択から削除
+        function removeFromSelection(selectionItemId) {
+            hairRemovalSelection = hairRemovalSelection.filter(item => item.id !== selectionItemId);
+            updateSelectionDisplay();
+            updateSummary();
+        }
+        
+        // 脱毛料金計算
+        function calculateHairRemovalPrice() {
+            if (hairRemovalSelection.length === 0) {
+                alert('施術が選択されていません');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('hairRemovalResult');
+            const detailsDiv = document.getElementById('hairRemovalPriceDetails');
+            const finalPriceSpan = document.getElementById('hairRemovalFinalPrice');
+            
+            let html = '<h4>施術内訳</h4>';
+            let totalPrice = 0;
+            
+            hairRemovalSelection.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                totalPrice += itemTotal;
+                
+                html += `
+                    <div class="price-item">
+                        <div>
+                            <span>${item.gender ? item.gender + ' - ' : ''}${item.name}</span>
+                            <div class="price-item-detail">
+                                ${item.priceType} × ${item.quantity}回
+                            </div>
+                            ${item.note ? `<div class="price-item-detail" style="font-size: 12px;">${item.note}</div>` : ''}
+                        </div>
+                        <span>¥${itemTotal.toLocaleString()}</span>
+                    </div>
+                `;
+            });
+            
+            detailsDiv.innerHTML = html;
+            finalPriceSpan.textContent = '¥' + totalPrice.toLocaleString();
+            resultDiv.style.display = 'block';
+        }
+        
+        // 脱毛メニューのリセット
+        function resetHairRemoval() {
+            // 選択をクリア
+            hairRemovalSelection = [];
+            hairRemovalSelectionId = 0;
+            
+            // 選択表示を更新
+            updateSelectionDisplay();
+            
+            // 計算結果を非表示
+            document.getElementById('hairRemovalResult').style.display = 'none';
+            
+            // すべてのチェックボックスをリセット
+            const allCheckboxes = document.querySelectorAll('#hair-removal-content input[type="checkbox"]');
+            allCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // 選択状態のメニューアイテムをリセット
+            const selectedItems = document.querySelectorAll('#hair-removal-content .menu-item.selected');
+            selectedItems.forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
+        // 詳細な料金を表示する関数
+        function showDetailedPrice() {
+            const beautyCount = Object.keys(selectedMenus).length;
+            const hairRemovalCount = hairRemovalSelection.length;
+            
+            if (beautyCount === 0 && hairRemovalCount === 0) {
+                alert('施術メニューを選択してください');
+                return;
+            }
+            
+            const combinedResultDiv = document.getElementById('combinedResult');
+            const combinedDetailsDiv = document.getElementById('combinedPriceDetails');
+            const combinedFinalPriceSpan = document.getElementById('combinedFinalPrice');
+            
+            let html = '';
+            let totalPrice = 0;
+            
+            // 美容施術の詳細
+            if (beautyCount > 0) {
+                html += '<div style="margin-bottom: 30px;"><h4 style="color: #d81b60; margin-bottom: 15px;">美容施術</h4>';
+                
+                Object.values(selectedMenus).forEach(menu => {
+                    const price = menu.currentPrice || 0;
+                    totalPrice += price;
+                    
+                    html += `
+                        <div class="price-item">
+                            <div>
+                                <span>${menu.name}</span>
+                                <div class="price-item-detail">
+                                    ${menu.selectedPriceType === 'first' ? '初回価格' : '通常価格'}
+                                    ${menu.discounts && menu.discounts.length > 0 ? ' - ' + menu.discounts.join(', ') : ''}
+                                </div>
+                            </div>
+                            <span>¥${price.toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            // 脱毛の詳細
+            if (hairRemovalCount > 0) {
+                html += '<div style="margin-bottom: 30px;"><h4 style="color: #d81b60; margin-bottom: 15px;">脱毛</h4>';
+                
+                hairRemovalSelection.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    totalPrice += itemTotal;
+                    
+                    html += `
+                        <div class="price-item">
+                            <div>
+                                <span>${item.gender ? item.gender + ' - ' : ''}${item.name}</span>
+                                <div class="price-item-detail">
+                                    ${item.priceType} × ${item.quantity}回
+                                </div>
+                                ${item.note ? `<div class="price-item-detail" style="font-size: 12px;">${item.note}</div>` : ''}
+                            </div>
+                            <span>¥${itemTotal.toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            combinedDetailsDiv.innerHTML = html;
+            combinedFinalPriceSpan.textContent = '¥' + totalPrice.toLocaleString();
+            combinedResultDiv.style.display = 'block';
+            
+            // 他の詳細表示を非表示にする
+            const beautyResult = document.getElementById('result');
+            const hairRemovalResult = document.getElementById('hairRemovalResult');
+            if (beautyResult) beautyResult.style.display = 'none';
+            if (hairRemovalResult) hairRemovalResult.style.display = 'none';
+        }
+
         window.onload = function() {
             initializeMenuList();
         };
     </script>
+    
+    <!-- 固定の合計金額バー -->
+    <div class="final-total-bar" id="finalTotalBar">
+        <div class="final-total-text" id="finalTotalText">合計: ¥0</div>
+        <button class="detail-button" onclick="showDetailedPrice()">詳細表示</button>
+    </div>
 </body>
 </html>
