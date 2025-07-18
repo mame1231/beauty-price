@@ -10,6 +10,9 @@
     <div class="container">
         <h1>美容皮膚科 料金計算アプリ</h1>
         
+        <!-- 警告メッセージエリア -->
+        <div id="warningMessage" class="warning-message" style="display: none;"></div>
+        
         <div class="tabs">
             <button class="tab-button active" onclick="toggleTab('beauty')">美容施術</button>
             <button class="tab-button" onclick="toggleTab('hair-removal')">脱毛</button>
@@ -43,22 +46,6 @@
                 </div>
             </div>
             
-            <div class="form-group">
-                <label>選択中の施術</label>
-                <div class="selection-container" id="hairRemovalSelection" style="border: 2px solid #1976d2; border-radius: 5px; padding: 15px; min-height: 100px;">
-                    <div id="emptySelectionMessage" style="text-align: center; color: #999; padding: 20px;">
-                        施術が選択されていません
-                    </div>
-                    <div id="selectionItems" style="display: none;">
-                    </div>
-                    <div class="selection-summary" id="selectionSummary" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
-                        <div style="display: flex; justify-content: space-between; font-weight: bold;">
-                            <span>合計: <span id="selectionTotalCount">0</span>件</span>
-                            <span style="color: #1976d2; font-size: 18px;">¥<span id="selectionTotalPrice">0</span></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
             
             
             <div id="hairRemovalResult" class="result" style="display: none;">
@@ -88,6 +75,7 @@
     
     <!-- 固定の合計金額バー -->
     <div class="final-total-bar" id="finalTotalBar">
+        <button class="clear-button" onclick="resetAll()">クリア</button>
         <div class="final-total-text" id="finalTotalText">合計: ¥0</div>
         <button class="detail-button" onclick="showDetailedPrice()">詳細表示</button>
     </div>
