@@ -31,8 +31,8 @@ const menuData = [
     { category: "ダーマペン", name: "ダーマペン オプションなし", first: 14300, regular: 20900 },
     { category: "ダーマペン", name: "ダーマペン レチノールアクティブ", first: 15400, regular: 23100 },
     { category: "ダーマペン", name: "ベルベットスキン", first: 17600, regular: 27500 },
-    { category: "ニードルRF", name: "ニードルRF 顔 （リジュラン追加＋16500）", first: 23100, regular: 35200 },
-    { category: "ニードルRF", name: "ニードルRF 顔 首 （リジュラン追加＋16500）", first: 34300, regular: 46400 },
+    { category: "ニードルRF", name: "ニードルRF 顔", first: 23100, regular: 35200 },
+    { category: "ニードルRF", name: "ニードルRF 顔 首", first: 34300, regular: 46400 },
     { category: "ニードルRF", name: "ニードルRF 顔 ニキビモード", first: 24200, regular: 37400 },
     { category: "痩身", name: "クールスカルプティング", first: null, regular: 33000 },
     { category: "痩身", name: "エムスカルプトNEO", first: 22000, regular: 44000 },
@@ -49,14 +49,18 @@ let hasInmodeRepeatDiscount = false;
 let usedCouponType = null; // 使用中のクーポンタイプ（line/weekday/repeat）
 let usedCouponLocation = null; // クーポンを使用した場所（beauty/hairRemoval）
 
-// 学割美容施術価格
-const studentBeautyPrices = {
-    "サリチル酸マクロゴール　顔": 3300,
-    "ハイドラジェントル": 6600,
-    "IPL　顔": 6600,
-    "ブルーレーザー　顔": 3300,
-    "サリチル酸マクロゴール＋ブルーレーザー　顔": 6600
+// グローバル割引状態の管理
+let globalDiscountState = {
+    hasDiscount: false,
+    discountType: null,
+    source: null
 };
+
+// オプション選択状態の管理（1会計1回まで）
+let hasIonOption = false;
+let hasBluelaserOption = false;
+let ionOptionItemId = null;
+let bluelaserOptionItemId = null;
 
 // 脱毛メニューのデータ
 const hairRemovalMenuData = {
@@ -113,100 +117,6 @@ let hairRemovalSelection = []; // 選択アイテムの配列
 let hairRemovalSelectionId = 0; // 選択アイテムのユニークID
 let hairRemovalPriceTypes = {}; // 各メニューの選択された価格タイプを保存
 
-// グローバル割引管理（1会計1割引ルール用）
-let globalDiscountState = {
-    hasDiscount: false,  // 昼割以外の割引が選択されているか
-    discountType: null,  // 選択されている割引の種類
-    source: null         // 'beauty' または 'hairRemoval'
-};
-
-// 警告メッセージを表示する関数
-function showWarning(message) {
-    const warningDiv = document.getElementById('warningMessage');
-    if (!warningDiv) return;
-    
-    warningDiv.textContent = message;
-    warningDiv.style.display = 'flex';
-    
-    // 5秒後に自動的に非表示
-    setTimeout(() => {
-        warningDiv.style.display = 'none';
-    }, 5000);
-}
-
-// 警告メッセージを非表示にする関数
-function hideWarning() {
-    const warningDiv = document.getElementById('warningMessage');
-    if (warningDiv) {
-        warningDiv.style.display = 'none';
-    }
-}
-
-// グローバル割引をクリアする関数
-function clearGlobalDiscount() {
-    globalDiscountState.hasDiscount = false;
-    globalDiscountState.discountType = null;
-    globalDiscountState.source = null;
-}
-
-// クーポンの使用状況をクリアする関数
-function clearUsedCoupon() {
-    usedCouponType = null;
-    usedCouponLocation = null;
-}
-
-// クーポンかどうかを判定する関数
-function isCoupon(discountType) {
-    return ['line', 'weekday', 'repeat'].includes(discountType);
-}
-
-// クーポンが使用可能かチェックする関数
-function canUseCoupon(discountType, location) {
-    if (!isCoupon(discountType)) return true;
-    
-    // 既に何かのクーポンが使用されている場合
-    if (usedCouponType) {
-        return false;
-    }
-    
-    return true;
-}
-
-// 脱毛の全ての割引を無効化する関数（昼割以外）
-function disableAllHairRemovalDiscounts() {
-    // 全身脱毛・部分脱毛の全メニューの割引を無効化
-    const discountTypes = ['student', 'line', 'repeat', 'coupon'];
-    
-    // 既存の全ての脱毛メニューIDを取得
-    document.querySelectorAll('[id^="student_hr"], [id^="line_hr"], [id^="repeat_hr"], [id^="coupon_hr"]').forEach(checkbox => {
-        if (checkbox && checkbox.checked) {
-            checkbox.checked = false;
-            checkbox.disabled = false; // 一旦有効化してから処理
-        }
-    });
-    
-    // 部位選択の割引も無効化
-    document.querySelectorAll('[id^="student_part_"], [id^="line_part_"], [id^="repeat_part_"], [id^="coupon_part_"]').forEach(checkbox => {
-        if (checkbox && checkbox.checked) {
-            checkbox.checked = false;
-            checkbox.disabled = false;
-        }
-    });
-}
-
-// 美容施術の全ての割引を無効化する関数
-function disableAllBeautyDiscounts() {
-    Object.keys(selectedMenus).forEach(itemId => {
-        ['weekday', 'line', 'repeat', 'student'].forEach(type => {
-            const checkbox = document.getElementById(`${type}_${itemId}`);
-            if (checkbox && checkbox.checked) {
-                checkbox.checked = false;
-            }
-        });
-    });
-    appliedDiscountType = null;
-}
-
 function initializeMenuList() {
     const menuListDiv = document.getElementById('menuList');
     const categories = [...new Set(menuData.map(item => item.category))];
@@ -257,7 +167,7 @@ function initializeMenuList() {
                                 ¥${(item.first || item.regular).toLocaleString()}
                             </div>
                         </div>
-                        ${!isDiscountDisabled ? `
+${!isDiscountDisabled ? `
                         <div class="control-group">
                             <label>割引適用</label>
                             <div class="discount-checkboxes">
@@ -272,13 +182,41 @@ function initializeMenuList() {
                                 ${showRepeatDiscount ? `
                                 <div class="discount-checkbox" id="repeat_wrapper_${itemId}">
                                     <input type="checkbox" id="repeat_${itemId}" onchange="updateItemPrice('${itemId}', 'repeat')">
-                                    <label for="repeat_${itemId}">リピートクーポン</label>
+                                    <label for="repeat_${itemId}">リピート</label>
                                 </div>
                                 ` : ''}
-                                ${studentBeautyPrices[item.name] ? `
-                                <div class="discount-checkbox" id="student_wrapper_${itemId}">
-                                    <input type="checkbox" id="student_${itemId}" onchange="updateItemPrice('${itemId}', 'student')">
-                                    <label for="student_${itemId}">学割</label>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${category === "ニードルRF" ? `
+                        <div class="control-group">
+                            <label>オプションメニュー</label>
+                            <div class="discount-checkboxes">
+                                <div class="discount-checkbox" id="rejuran_wrapper_${itemId}">
+                                    <input type="checkbox" id="rejuran_${itemId}" onchange="updateItemPrice('${itemId}', 'rejuran')" disabled>
+                                    <label for="rejuran_${itemId}">リジュラン ¥16,500</label>
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${(category === "毛穴洗浄" && item.name === "ハイドラジェントル") || 
+                          (category === "IPL" && (item.name === "IPL　顔" || item.name === "IPL　顔＋首")) ||
+                          category === "ピコレーザー" ||
+                          (category === "ケミカルピーリング" && !item.name.includes("ブルーレーザー")) ||
+                          category === "HIFU" ||
+                          category === "インモード" ||
+                          category === "インモード ルメッカ" ? `
+                        <div class="control-group">
+                            <label>オプションメニュー</label>
+                            <div class="discount-checkboxes">
+                                <div class="discount-checkbox" id="ion_wrapper_${itemId}">
+                                    <input type="checkbox" id="ion_${itemId}" onchange="updateItemPrice('${itemId}', 'ion')" disabled>
+                                    <label for="ion_${itemId}">イオン導入 ¥3,300</label>
+                                </div>
+                                ${category !== "ケミカルピーリング" || !item.name.includes("ブルーレーザー") ? `
+                                <div class="discount-checkbox" id="bluelaser_wrapper_${itemId}">
+                                    <input type="checkbox" id="bluelaser_${itemId}" onchange="updateItemPrice('${itemId}', 'bluelaser')" disabled>
+                                    <label for="bluelaser_${itemId}">ブルーレーザー ¥6,600</label>
                                 </div>
                                 ` : ''}
                             </div>
@@ -308,8 +246,66 @@ function toggleMenu(itemId, menuName) {
             selectedPriceType: menuInfo.first ? 'first' : 'regular'
         };
         updateItemPrice(itemId);
+        
+        // ニードルRFが選択されたら、リジュランオプションを有効にする
+        if (menuInfo.category === "ニードルRF") {
+            const rejuranCheckbox = document.getElementById(`rejuran_${itemId}`);
+            if (rejuranCheckbox) {
+                rejuranCheckbox.disabled = false;
+            }
+        }
+        
+        // 対象メニューが選択されたら、イオン導入とブルーレーザーオプションを有効にする
+        if ((menuInfo.category === "毛穴洗浄" && menuInfo.name === "ハイドラジェントル") || 
+            (menuInfo.category === "IPL" && (menuInfo.name === "IPL　顔" || menuInfo.name === "IPL　顔＋首")) ||
+            menuInfo.category === "ピコレーザー" ||
+            (menuInfo.category === "ケミカルピーリング" && !menuInfo.name.includes("ブルーレーザー")) ||
+            menuInfo.category === "HIFU" ||
+            menuInfo.category === "インモード" ||
+            menuInfo.category === "インモード ルメッカ") {
+            
+            const ionCheckbox = document.getElementById(`ion_${itemId}`);
+            const bluelaserCheckbox = document.getElementById(`bluelaser_${itemId}`);
+            
+            if (ionCheckbox) {
+                ionCheckbox.disabled = false;
+            }
+            if (bluelaserCheckbox) {
+                bluelaserCheckbox.disabled = false;
+            }
+        }
     } else {
         menuItem.classList.remove('selected');
+        
+        // ニードルRFの選択が解除されたら、リジュランオプションを無効にしてチェックを外す
+        if (menuName.includes("ニードルRF")) {
+            const rejuranCheckbox = document.getElementById(`rejuran_${itemId}`);
+            if (rejuranCheckbox) {
+                rejuranCheckbox.checked = false;
+                rejuranCheckbox.disabled = true;
+            }
+        }
+        
+        // 対象メニューの選択が解除されたら、オプションを無効にしてチェックを外す
+        const ionCheckbox = document.getElementById(`ion_${itemId}`);
+        const bluelaserCheckbox = document.getElementById(`bluelaser_${itemId}`);
+        
+        if (ionCheckbox) {
+            if (ionCheckbox.checked && ionOptionItemId === itemId) {
+                hasIonOption = false;
+                ionOptionItemId = null;
+            }
+            ionCheckbox.checked = false;
+            ionCheckbox.disabled = true;
+        }
+        if (bluelaserCheckbox) {
+            if (bluelaserCheckbox.checked && bluelaserOptionItemId === itemId) {
+                hasBluelaserOption = false;
+                bluelaserOptionItemId = null;
+            }
+            bluelaserCheckbox.checked = false;
+            bluelaserCheckbox.disabled = true;
+        }
         
         // 平日割引が適用されていた場合は解除
         if (selectedMenus[itemId] && selectedMenus[itemId].hasWeekdayDiscount) {
@@ -347,7 +343,8 @@ function setPriceType(itemId, priceType) {
     }
     
     updateItemPrice(itemId);
-    updateDiscountAvailability();
+    updateWeekdayDiscountAvailability();
+    updateLineDiscountAvailability();
     
     // セットメニューの価格タイプ変更時もチェック
     const menu = selectedMenus[itemId];
@@ -362,115 +359,143 @@ function updateItemPrice(itemId, discountType) {
     const menu = selectedMenus[itemId];
     const weekdayCheckbox = document.getElementById(`weekday_${itemId}`);
     const lineCheckbox = document.getElementById(`line_${itemId}`);
-    const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
-    const studentCheckbox = document.getElementById(`student_${itemId}`);
     
-    // 1会計1クーポンルールの実装
-    if (discountType) {
-        const clickedCheckbox = document.getElementById(`${discountType}_${itemId}`);
-        
-        if (clickedCheckbox && clickedCheckbox.checked) {
-            // 初回価格選択時は割引適用不可
-            if (menu.selectedPriceType === 'first') {
-                clickedCheckbox.checked = false;
-                alert('初回価格は最安値のため、他の割引との併用はできません。');
+    // オプションの排他制御（1会計1回まで）
+    if (discountType === 'ion') {
+        const ionCheckbox = document.getElementById(`ion_${itemId}`);
+        if (ionCheckbox && ionCheckbox.checked) {
+            if (hasIonOption && ionOptionItemId !== itemId) {
+                ionCheckbox.checked = false;
+                alert('イオン導入は1会計につき1回までです。');
+                return;
+            }
+            hasIonOption = true;
+            ionOptionItemId = itemId;
+        } else if (ionCheckbox && !ionCheckbox.checked && ionOptionItemId === itemId) {
+            hasIonOption = false;
+            ionOptionItemId = null;
+        }
+    }
+    
+    if (discountType === 'bluelaser') {
+        const bluelaserCheckbox = document.getElementById(`bluelaser_${itemId}`);
+        if (bluelaserCheckbox && bluelaserCheckbox.checked) {
+            if (hasBluelaserOption && bluelaserOptionItemId !== itemId) {
+                bluelaserCheckbox.checked = false;
+                alert('ブルーレーザーは1会計につき1回までです。');
+                return;
+            }
+            hasBluelaserOption = true;
+            bluelaserOptionItemId = itemId;
+        } else if (bluelaserCheckbox && !bluelaserCheckbox.checked && bluelaserOptionItemId === itemId) {
+            hasBluelaserOption = false;
+            bluelaserOptionItemId = null;
+        }
+    }
+    
+    // 平日割引とLINEクーポンの排他制御（最初に選択したものを優先）
+    if (discountType === 'weekday') {
+        if (weekdayCheckbox && weekdayCheckbox.checked) {
+            // 既に他でLINEクーポンが使用されている場合は阻止
+            if (hasLineDiscount) {
+                weekdayCheckbox.checked = false;
+                alert('LINEクーポンが既に使用されているため、平日割引は適用できません。');
                 return;
             }
             
-            // クーポンの使用可能性をチェック
-            if (isCoupon(discountType)) {
-                if (!canUseCoupon(discountType, 'beauty')) {
-                    clickedCheckbox.checked = false;
-                    const couponNames = {
-                        'line': 'LINEクーポン',
-                        'weekday': '2200円OFFクーポン',
-                        'repeat': 'リピートクーポン'
-                    };
-                    showWarning(`既に${couponNames[usedCouponType]}が使用されています。1会計につき1つのクーポンのみ使用可能です。`);
-                    return;
-                }
-            }
-            
-            
-            // グローバル割引チェック（クーポンのみチェック）
-            if (isCoupon(discountType) && globalDiscountState.hasDiscount && 
-                globalDiscountState.source !== 'beauty' && isCoupon(globalDiscountState.discountType)) {
-                clickedCheckbox.checked = false;
-                showWarning(`脱毛で${globalDiscountState.discountType}が選択されているため、美容施術のクーポンは適用できません。`);
+            // 既に他で平日割引が使用されている場合は阻止
+            if (hasWeekdayDiscount) {
+                weekdayCheckbox.checked = false;
+                alert('平日割引は既に他のメニューで使用されています。1会計につき1つまでです。');
                 return;
             }
             
-            // クーポンの場合、他のクーポンを全て解除
-            if (isCoupon(discountType)) {
-                // 美容施術の他のクーポンを解除
-                Object.keys(selectedMenus).forEach(id => {
-                    ['weekday', 'line', 'repeat'].forEach(type => {
-                        if (type !== discountType || id !== itemId) {
-                            const checkbox = document.getElementById(`${type}_${id}`);
-                            if (checkbox && checkbox.checked) {
-                                checkbox.checked = false;
-                            }
-                        }
-                    });
-                });
-                
-                // 脱毛のクーポンも解除
-                Object.keys(hairRemovalPriceTypes || {}).forEach(id => {
-                    const couponCheckbox = document.getElementById(`coupon_${id}`);
-                    const lineCheckbox = document.getElementById(`line_${id}`);
-                    if (couponCheckbox && couponCheckbox.checked) {
-                        couponCheckbox.checked = false;
-                    }
-                    if (lineCheckbox && lineCheckbox.checked) {
-                        lineCheckbox.checked = false;
-                    }
-                });
-                
-                // クーポンタイプを更新
-                usedCouponType = discountType;
-                usedCouponLocation = 'beauty';
-            }
+            hasWeekdayDiscount = true;
+            menu.hasWeekdayDiscount = true;
             
-            // グローバル割引状態を更新（クーポンのみ）
-            if (isCoupon(discountType)) {
-                globalDiscountState.hasDiscount = true;
-                globalDiscountState.discountType = discountType === 'weekday' ? '平日2200円OFFクーポン' : 
-                                                  discountType === 'line' ? 'LINEクーポン' :
-                                                  discountType === 'repeat' ? 'リピートクーポン' : discountType;
-                globalDiscountState.source = 'beauty';
-            }
-            
-            // 脱毛の割引を全て無効化（昼割以外）
-            // disableAllHairRemovalDiscounts(); // クーポンのみ1会計1枚制限
-            
-            // リピートクーポンの特別処理
-            if (discountType === 'repeat') {
-                const inmodePrice = {
-                    'インモード FORMA': 22000,
-                    'インモード Fx': 22000,
-                    'インモードVリフト（FORMA＋Fxセット）': 44000
-                };
-                menu.inmodeRepeatPrice = inmodePrice[menu.name];
+            // リピート割引も解除（併用不可）
+            const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+            if (repeatCheckbox) {
+                repeatCheckbox.checked = false;
             }
         } else {
-            // チェックが外された場合
-            if (isCoupon(discountType) && usedCouponType === discountType) {
-                clearUsedCoupon();
-            }
-            if (globalDiscountState.discountType === (discountType === 'weekday' ? '平日2200円OFFクーポン' : 
-                                                     discountType === 'line' ? 'LINEクーポン' :
-                                                     discountType === 'repeat' ? 'リピートクーポン' :
-                                                     discountType === 'student' ? '学割' : discountType)) {
-                clearGlobalDiscount();
+            // チェックが外された場合のみ状態をリセット
+            if (menu.hasWeekdayDiscount) {
+                hasWeekdayDiscount = false;
+                menu.hasWeekdayDiscount = false;
             }
         }
     }
     
+    if (discountType === 'line') {
+        if (lineCheckbox && lineCheckbox.checked) {
+            // 既に他で平日割引が使用されている場合は阻止
+            if (hasWeekdayDiscount) {
+                lineCheckbox.checked = false;
+                alert('平日割引が既に使用されているため、LINEクーポンは適用できません。');
+                return;
+            }
+            
+            // 既に他でLINEクーポンが使用されている場合は阻止
+            if (hasLineDiscount) {
+                lineCheckbox.checked = false;
+                alert('LINEクーポンは既に他のメニューで使用されています。1会計につき1つまでです。');
+                return;
+            }
+            
+            hasLineDiscount = true;
+            menu.hasLineDiscount = true;
+            
+            // リピート割引も解除（併用不可）
+            const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+            if (repeatCheckbox) {
+                repeatCheckbox.checked = false;
+            }
+        } else {
+            // チェックが外された場合のみ状態をリセット
+            if (menu.hasLineDiscount) {
+                hasLineDiscount = false;
+                menu.hasLineDiscount = false;
+            }
+        }
+    } else if (discountType === 'repeat' && document.getElementById(`repeat_${itemId}`).checked) {
+        // リピート割引選択時は平日割引とLINEクーポンを解除
+        weekdayCheckbox.checked = false;
+        lineCheckbox.checked = false;
+        if (menu.hasWeekdayDiscount) {
+            hasWeekdayDiscount = false;
+            menu.hasWeekdayDiscount = false;
+        }
+        if (menu.hasLineDiscount) {
+            hasLineDiscount = false;
+            menu.hasLineDiscount = false;
+        }
+        
+        // リピート割引選択時は自動的に初回価格を選択
+        if (menu.first) {
+            setPriceType(itemId, 'first');
+        }
+    }
+    
+    // 平日割引のチェックが外された場合
+    if (discountType === 'weekday' && !weekdayCheckbox.checked && menu.hasWeekdayDiscount) {
+        hasWeekdayDiscount = false;
+        menu.hasWeekdayDiscount = false;
+    }
+    
+    // LINEクーポンのチェックが外された場合
+    if (discountType === 'line' && !lineCheckbox.checked && menu.hasLineDiscount) {
+        hasLineDiscount = false;
+        menu.hasLineDiscount = false;
+    }
+    
     const priceDisplay = document.getElementById(`display_${itemId}`);
+    
     let price = menu.selectedPriceType === 'first' && menu.first ? menu.first : menu.regular;
+    
     let discounts = [];
     
-    // セット価格の処理
+    // セット価格の場合は先に処理して、他の処理をスキップ
     if (menu.isSetPrice) {
         price = menu.setPrice;
         if (menu.setPrice === 0) {
@@ -479,27 +504,91 @@ function updateItemPrice(itemId, discountType) {
             discounts.push('セット価格適用');
         }
         
+        // セット価格にLINEクーポンを適用する場合
+        if (lineCheckbox && lineCheckbox.checked && menu.setMenuType === 'regular') {
+            const setMenu = menuData.find(item => item.name === 'ハイドラ＋メソナJ');
+            if (setMenu && setMenu.first) {
+                if (menu.name === 'ハイドラジェントル') {
+                    price = setMenu.first;
+                    discounts = ['セット価格適用（LINE初回価格）'];
+                } else if (menu.name === 'メソナJ') {
+                    price = 0;
+                    discounts = ['セット価格適用（メソナJ分・LINE初回価格）'];
+                }
+            }
+        }
+        
+        // セット価格の場合は他の処理をスキップ
         menu.currentPrice = price;
         menu.discounts = discounts;
         priceDisplay.textContent = `¥${price.toLocaleString()}`;
         updateSummary();
-        updateDiscountAvailability();
+        updateWeekdayDiscountAvailability();
+        updateLineDiscountAvailability();
         return;
     }
     
-    // 割引の適用（優先順位: LINE > 学割 > インモードリピート > 2200円OFF）
-    if (lineCheckbox && lineCheckbox.checked && menu.first) {
+    // 通常のLINEクーポンの適用（通常価格→初回価格にする）
+    if (lineCheckbox && lineCheckbox.checked && menu.selectedPriceType === 'regular' && menu.first) {
         price = menu.first;
-        discounts.push('LINEクーポン');
-    } else if (studentCheckbox && studentCheckbox.checked && studentBeautyPrices[menu.name]) {
-        price = studentBeautyPrices[menu.name];
-        discounts.push('学割');
-    } else if (repeatCheckbox && repeatCheckbox.checked && menu.inmodeRepeatPrice) {
-        price = menu.inmodeRepeatPrice;
-        discounts.push('リピートクーポン');
-    } else if (weekdayCheckbox && weekdayCheckbox.checked && menu.regular >= 13200) {
-        price = menu.regular - 2200;
-        discounts.push('2200円OFFクーポン');
+        discounts.push('LINE（初回価格適用）');
+    } else if (lineCheckbox && lineCheckbox.checked && menu.selectedPriceType === 'regular' && !menu.first) {
+        // 初回価格がない場合はLINEクーポンを無効化
+        lineCheckbox.checked = false;
+    }
+    
+    // 平日割引の適用（初回価格・LINE適用時は無効、通常価格13,200円以上のみ）
+    if (weekdayCheckbox && weekdayCheckbox.checked && 
+        menu.selectedPriceType === 'regular' && 
+        !lineCheckbox.checked &&
+        menu.regular >= 13200) {
+        price -= 2200;
+        discounts.push('平日割引');
+    } else if (weekdayCheckbox && weekdayCheckbox.checked) {
+        // 条件を満たさない場合はチェックを外す
+        weekdayCheckbox.checked = false;
+        if (menu.hasWeekdayDiscount) {
+            hasWeekdayDiscount = false;
+            menu.hasWeekdayDiscount = false;
+        }
+    }
+    
+    const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+    if (repeatCheckbox && repeatCheckbox.checked) {
+        // リピート割引の適用（平日割引・LINEクーポンとの併用不可）
+        if (!weekdayCheckbox.checked && !lineCheckbox.checked) {
+            // リピート割引は初回価格を適用
+            if (menu.first && menu.selectedPriceType === 'regular') {
+                price = menu.first;
+            }
+            discounts.push('リピート（初回価格適用）');
+        } else {
+            // 他の割引が選択されている場合はリピート割引を解除
+            repeatCheckbox.checked = false;
+        }
+    }
+    
+    if (price < 0) price = 0;
+    
+    // リジュランオプションの処理
+    const rejuranCheckbox = document.getElementById(`rejuran_${itemId}`);
+    if (rejuranCheckbox && rejuranCheckbox.checked) {
+        price += 16500;
+        discounts.push('リジュラン追加');
+    }
+    
+    // イオン導入オプションの処理
+    const ionCheckbox = document.getElementById(`ion_${itemId}`);
+    if (ionCheckbox && ionCheckbox.checked) {
+        price += 3300;
+        discounts.push('イオン導入追加');
+    }
+    
+    // ブルーレーザーオプションの処理
+    const bluelaserCheckbox = document.getElementById(`bluelaser_${itemId}`);
+    if (bluelaserCheckbox && bluelaserCheckbox.checked) {
+        price += 6600;
+        discounts.push('ブルーレーザー追加');
     }
     
     menu.currentPrice = price;
@@ -507,73 +596,102 @@ function updateItemPrice(itemId, discountType) {
     
     priceDisplay.textContent = `¥${price.toLocaleString()}`;
     updateSummary();
-    updateDiscountAvailability();
+    updateWeekdayDiscountAvailability();
+    updateLineDiscountAvailability();
     checkSetMenuCombination();
 }
 
-function updateDiscountAvailability() {
+function updateWeekdayDiscountAvailability() {
     Object.keys(selectedMenus).forEach(itemId => {
         const menu = selectedMenus[itemId];
         const weekdayCheckbox = document.getElementById(`weekday_${itemId}`);
+        const weekdayWrapper = document.getElementById(`weekday_wrapper_${itemId}`);
         const lineCheckbox = document.getElementById(`line_${itemId}`);
         const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
-        const studentCheckbox = document.getElementById(`student_${itemId}`);
         
-        // 初回価格選択時は全ての割引を無効化
-        const isFirstPrice = menu.selectedPriceType === 'first';
+        // 平日割引の無効化条件
+        const shouldDisable = 
+            // 初回価格選択時（初回価格自体が割引なので他の割引と併用不可）
+            menu.selectedPriceType === 'first' ||
+            // 通常価格が13,200円未満
+            menu.regular < 13200 ||
+            // LINEクーポンが選択されている（1施術1割引）
+            lineCheckbox.checked ||
+            // 既に他の施術で平日割引が使われている
+            (hasWeekdayDiscount && !menu.hasWeekdayDiscount) ||
+            // リピート割引が選択されている（1施術1割引）
+            (repeatCheckbox && repeatCheckbox.checked);
         
-        // 2200円OFFクーポンの条件
-        if (weekdayCheckbox) {
-            const weekdayWrapper = document.getElementById(`weekday_wrapper_${itemId}`);
-            const shouldDisable = isFirstPrice || menu.regular < 13200 || 
-                (usedCouponType !== null && usedCouponType !== 'weekday');
-            
-            weekdayCheckbox.disabled = shouldDisable;
-            weekdayWrapper.classList.toggle('disabled', shouldDisable);
+        weekdayCheckbox.disabled = shouldDisable;
+        weekdayWrapper.classList.toggle('disabled', shouldDisable);
+        
+        if (shouldDisable && weekdayCheckbox.checked) {
+            weekdayCheckbox.checked = false;
+            updateItemPrice(itemId);
         }
         
-        // LINEクーポンの条件
-        if (lineCheckbox) {
-            const lineWrapper = document.getElementById(`line_wrapper_${itemId}`);
-            const shouldDisable = isFirstPrice || !menu.first || 
-                (usedCouponType !== null && usedCouponType !== 'line');
+        // リピート割引の無効化条件（1施術1割引）
+        if (repeatCheckbox) {
+            const repeatWrapper = document.getElementById(`repeat_wrapper_${itemId}`);
+            const shouldDisableRepeat = 
+                menu.selectedPriceType === 'first' || 
+                weekdayCheckbox.checked || 
+                lineCheckbox.checked;
             
-            lineCheckbox.disabled = shouldDisable;
+            repeatCheckbox.disabled = shouldDisableRepeat;
+            if (repeatWrapper) {
+                repeatWrapper.classList.toggle('disabled', shouldDisableRepeat);
+            }
+            
+            if (shouldDisableRepeat && repeatCheckbox.checked) {
+                repeatCheckbox.checked = false;
+                updateItemPrice(itemId);
+            }
+        }
+    });
+}
+
+function updateLineDiscountAvailability() {
+    Object.keys(selectedMenus).forEach(itemId => {
+        const menu = selectedMenus[itemId];
+        const lineCheckbox = document.getElementById(`line_${itemId}`);
+        const lineWrapper = document.getElementById(`line_wrapper_${itemId}`);
+        
+        if (!lineCheckbox) return; // クールスカルプティングなど割引なしの場合
+        
+        // LINEクーポンの無効化条件: 
+        const weekdayCheckbox = document.getElementById(`weekday_${itemId}`);
+        const repeatCheckbox = document.getElementById(`repeat_${itemId}`);
+        const shouldDisable = 
+            // 初回価格選択時（初回価格自体が割引）
+            menu.selectedPriceType === 'first' || 
+            // 初回価格が存在しない場合
+            !menu.first ||
+            // 既に他の施術でLINE割引が使われている
+            (hasLineDiscount && !menu.hasLineDiscount) ||
+            // 平日割引が選択されている（1施術1割引）
+            (weekdayCheckbox && weekdayCheckbox.checked) ||
+            // リピート割引が選択されている（1施術1割引）
+            (repeatCheckbox && repeatCheckbox.checked);
+        
+        lineCheckbox.disabled = shouldDisable;
+        if (lineWrapper) {
             lineWrapper.classList.toggle('disabled', shouldDisable);
         }
         
-        // リピートクーポンの条件
-        if (repeatCheckbox) {
-            const repeatWrapper = document.getElementById(`repeat_wrapper_${itemId}`);
-            const shouldDisable = isFirstPrice || 
-                (usedCouponType !== null && usedCouponType !== 'repeat');
-            
-            repeatCheckbox.disabled = shouldDisable;
-            repeatWrapper.classList.toggle('disabled', shouldDisable);
-        }
-        
-        // 学割の条件（学割同士は併用OK）
-        if (studentCheckbox) {
-            const studentWrapper = document.getElementById(`student_wrapper_${itemId}`);
-            const shouldDisable = isFirstPrice;
-            
-            studentCheckbox.disabled = shouldDisable;
-            studentWrapper.classList.toggle('disabled', shouldDisable);
+        if (shouldDisable && lineCheckbox.checked) {
+            lineCheckbox.checked = false;
+            updateItemPrice(itemId);
         }
     });
 }
 
 function updateSummary() {
-    console.log('[updateSummary] 関数が呼ばれました');
-    console.log('[updateSummary] hairRemovalSelection:', hairRemovalSelection);
-    
     // 美容施術の数
     const beautyCount = Object.keys(selectedMenus).length;
     // 脱毛の数
     const hairRemovalCount = hairRemovalSelection.length;
     const totalCount = beautyCount + hairRemovalCount;
-    
-    console.log('[updateSummary] 美容施術数:', beautyCount, '脱毛数:', hairRemovalCount);
     
     if (totalCount === 0) {
         // 固定バーを非表示
@@ -592,16 +710,8 @@ function updateSummary() {
     
     // 脱毛の合計
     hairRemovalSelection.forEach(item => {
-        const itemPrice = item.price || 0;
-        const itemQuantity = item.quantity || 0;
-        const itemTotal = itemPrice * itemQuantity;
-        hairRemovalTotal += itemTotal;
-        
-        if (!item.price || item.price === 0) {
-            console.warn('[updateSummary] 警告: 価格が設定されていません:', item);
-        }
+        hairRemovalTotal += (item.price * item.quantity) || 0;
     });
-    console.log('[updateSummary] 美容合計:', beautyTotal, '脱毛合計:', hairRemovalTotal, '総合計:', beautyTotal + hairRemovalTotal);
     
     const total = beautyTotal + hairRemovalTotal;
     
@@ -741,29 +851,11 @@ function checkSetMenuCombination() {
 }
 
 function resetAll() {
-    // グローバル割引状態をクリア
-    clearGlobalDiscount();
-    // クーポン管理をクリア
-    clearUsedCoupon();
+    // 美容施術をリセット
+    resetBeauty();
     
-    // すべてのチェックボックスをクリア
-    Object.keys(selectedMenus).forEach(itemId => {
-        const checkbox = document.getElementById(itemId);
-        if (checkbox) {
-            checkbox.checked = false;
-            const menuItem = document.getElementById(`item_${itemId}`);
-            if (menuItem) {
-                menuItem.classList.remove('selected');
-            }
-        }
-    });
-    
-    // 選択メニューをクリア
-    selectedMenus = {};
-    hasWeekdayDiscount = false;
-    hasLineDiscount = false;
-    hasStudentDiscount = false;
-    hasInmodeRepeatDiscount = false;
+    // 脱毛施術をリセット
+    resetHairRemoval();
     
     // 脱毛選択もクリア
     hairRemovalSelection = [];
@@ -799,39 +891,25 @@ function resetAll() {
         finalTotalText.textContent = '合計: ¥0';
     }
     
+    // グローバル割引状態もリセット
+    globalDiscountState = {
+        hasDiscount: false,
+        discountType: null,
+        source: null
+    };
+    
+    // すべてのクーポン状態をリセット
+    usedCouponType = null;
+    usedCouponLocation = null;
+    
+    // オプション選択状態もリセット
+    hasIonOption = false;
+    hasBluelaserOption = false;
+    ionOptionItemId = null;
+    bluelaserOptionItemId = null;
+    
     // updateSummaryを呼び出して状態を更新
     updateSummary();
-    
-    // すべての割引チェックボックスをリセット
-    const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
-    allCheckboxes.forEach(checkbox => {
-        checkbox.checked = false;
-        checkbox.disabled = false;
-    });
-    
-    // 価格タイプボタンをリセット
-    const allPriceButtons = document.querySelectorAll('.price-type-button');
-    allPriceButtons.forEach(button => {
-        button.classList.remove('active');
-    });
-    
-    // 初回価格があるメニューは初回価格を選択状態に
-    menuData.forEach((item, index) => {
-        const itemId = `menu_${item.category.replace(/\s/g, '_')}_${index}`;
-        const firstButton = document.getElementById(`first_${itemId}`);
-        const regularButton = document.getElementById(`regular_${itemId}`);
-        if (firstButton && !firstButton.disabled) {
-            firstButton.classList.add('active');
-        } else if (regularButton) {
-            regularButton.classList.add('active');
-        }
-    });
-    
-    // 割引ラッパーのdisabledクラスを削除
-    const discountWrappers = document.querySelectorAll('.discount-checkbox');
-    discountWrappers.forEach(wrapper => {
-        wrapper.classList.remove('disabled');
-    });
 }
 
 function toggleTab(tabName) {
@@ -1247,11 +1325,11 @@ function updateHairRemovalDiscounts(itemId, gender, category, index) {
     const couponCheckbox = document.getElementById(`coupon_${itemId}`);
     const lineCheckbox = document.getElementById(`line_${itemId}`);
     
-    const studentWrapper = studentCheckbox ? (document.getElementById(`student_wrapper_${itemId}`) || studentCheckbox.closest('.discount-checkbox')) : null;
-    const noonWrapper = noonCheckbox ? (document.getElementById(`noon_wrapper_${itemId}`) || noonCheckbox.closest('.discount-checkbox')) : null;
-    const repeatWrapper = repeatCheckbox ? (document.getElementById(`repeat_wrapper_${itemId}`) || repeatCheckbox.closest('.discount-checkbox')) : null;
-    const couponWrapper = couponCheckbox ? (document.getElementById(`coupon_wrapper_${itemId}`) || couponCheckbox.closest('.discount-checkbox')) : null;
-    const lineWrapper = lineCheckbox ? (document.getElementById(`line_wrapper_${itemId}`) || lineCheckbox.closest('.discount-checkbox')) : null;
+    const studentWrapper = document.getElementById(`student_wrapper_${itemId}`);
+    const noonWrapper = document.getElementById(`noon_wrapper_${itemId}`);
+    const repeatWrapper = document.getElementById(`repeat_wrapper_${itemId}`);
+    const couponWrapper = document.getElementById(`coupon_wrapper_${itemId}`);
+    const lineWrapper = document.getElementById(`line_wrapper_${itemId}`);
     
     // 初回価格が選択されている場合はすべての割引を無効化
     const selectedPriceType = hairRemovalPriceTypes[itemId] || 'first';
@@ -1275,135 +1353,61 @@ function updateHairRemovalDiscounts(itemId, gender, category, index) {
     
     // LINEクーポンが選択された場合
     if (lineCheckbox && lineCheckbox.checked) {
-        // クーポンの使用可能性をチェック
-        if (!canUseCoupon('line', 'hairRemoval')) {
-            lineCheckbox.checked = false;
-            const couponNames = {
-                'line': 'LINEクーポン',
-                'weekday': '2200円OFFクーポン',
-                'repeat': 'リピートクーポン'
-            };
-            showWarning(`既に${couponNames[usedCouponType]}が使用されています。1会計につき1つのクーポンのみ使用可能です。`);
-            return;
-        }
-        
-        // 他の全てのクーポンを解除
-        Object.keys(hairRemovalPriceTypes || {}).forEach(id => {
-            if (id !== itemId) {
-                const otherLineCheckbox = document.getElementById(`line_${id}`);
-                const otherCouponCheckbox = document.getElementById(`coupon_${id}`);
-                if (otherLineCheckbox && otherLineCheckbox.checked) {
-                    otherLineCheckbox.checked = false;
-                }
-                if (otherCouponCheckbox && otherCouponCheckbox.checked) {
-                    otherCouponCheckbox.checked = false;
-                }
-            }
-        });
-        
-        // 美容施術のクーポンも解除
-        Object.keys(selectedMenus).forEach(id => {
-            ['weekday', 'line', 'repeat'].forEach(type => {
-                const checkbox = document.getElementById(`${type}_${id}`);
-                if (checkbox && checkbox.checked) {
-                    checkbox.checked = false;
-                }
-            });
-        });
-        
-        // クーポンタイプを更新
-        usedCouponType = 'line';
-        usedCouponLocation = 'hairRemoval';
-        
-        
-        // 他の割引が既に選択されているかチェック
-        let disabledDiscounts = [];
-        
         // 学生割引を無効化（併用不可）
         if (studentCheckbox) {
-            if (studentCheckbox.checked) disabledDiscounts.push('学生割引');
             studentCheckbox.checked = false;
             studentCheckbox.disabled = true;
             studentWrapper.classList.add('disabled');
         }
         // 昼割を無効化（併用不可）
         if (noonCheckbox) {
-            if (noonCheckbox.checked) disabledDiscounts.push('昼割');
             noonCheckbox.checked = false;
             noonCheckbox.disabled = true;
             noonWrapper.classList.add('disabled');
         }
         // 11回目以降を無効化（併用不可）
         if (repeatCheckbox) {
-            if (repeatCheckbox.checked) disabledDiscounts.push('11回目以降');
             repeatCheckbox.checked = false;
             repeatCheckbox.disabled = true;
             repeatWrapper.classList.add('disabled');
         }
         // 2,200円OFFクーポンを無効化（併用不可）
         if (couponCheckbox && couponWrapper) {
-            if (couponCheckbox.checked) disabledDiscounts.push('2,200円OFFクーポン');
             couponCheckbox.checked = false;
             couponCheckbox.disabled = true;
             couponWrapper.classList.add('disabled');
-            couponWrapper.title = 'LINEクーポンと併用できません';
+            console.log('LINE coupon selected - disabled 2200 yen coupon for item:', itemId, 'couponWrapper:', couponWrapper);
         }
-        
-        // 警告メッセージを表示
-        if (disabledDiscounts.length > 0) {
-            showWarning(`LINEクーポンは${disabledDiscounts.join('、')}と併用できません。`);
-        }
-        
-        // グローバル割引状態を更新
-        globalDiscountState.hasDiscount = true;
-        globalDiscountState.discountType = 'LINEクーポン';
-        globalDiscountState.source = 'hairRemoval';
-        
-        // 美容施術の割引を全て無効化
-        // disableAllBeautyDiscounts(); // クーポンのみ1会計1枚制限
     }
     
     // 学生割引が選択された場合（初回価格選択時も含む）
     if (studentCheckbox && studentCheckbox.checked) {
-        let disabledDiscounts = [];
-        
-        // 同一施術での他の割引を無効化（学割は施術ごとに適用可能）
+        // 他のすべての割引を無効化（1施術1割引）
         if (lineCheckbox) {
-            if (lineCheckbox.checked) disabledDiscounts.push('LINEクーポン');
             lineCheckbox.checked = false;
             lineCheckbox.disabled = true;
             lineWrapper.classList.add('disabled');
         }
         if (couponCheckbox) {
-            if (couponCheckbox.checked) disabledDiscounts.push('2,200円OFFクーポン');
             couponCheckbox.checked = false;
             couponCheckbox.disabled = true;
             couponWrapper.classList.add('disabled');
         }
-        // 昼割も併用不可
         if (noonCheckbox) {
-            if (noonCheckbox.checked) disabledDiscounts.push('昼割');
             noonCheckbox.checked = false;
             noonCheckbox.disabled = true;
             noonWrapper.classList.add('disabled');
         }
         if (repeatCheckbox) {
-            if (repeatCheckbox.checked) disabledDiscounts.push('11回目以降');
             repeatCheckbox.checked = false;
             repeatCheckbox.disabled = true;
             repeatWrapper.classList.add('disabled');
-        }
-        
-        // 警告メッセージを表示
-        if (disabledDiscounts.length > 0) {
-            showWarning(`学生割引は${disabledDiscounts.join('、')}と併用できません。`);
         }
     }
     
     // 昼割が選択された場合
     if (noonCheckbox && noonCheckbox.checked) {
-        // 昼割は2200円OFFクーポンとのみ併用可能
-        // 学割も併用不可
+        // 2200円OFFクーポン以外のすべての割引を無効化（1施術1割引、ただし昼割+2200円OFFは併用可）
         if (studentCheckbox) {
             studentCheckbox.checked = false;
             studentCheckbox.disabled = true;
@@ -1422,134 +1426,53 @@ function updateHairRemovalDiscounts(itemId, gender, category, index) {
         // 2200円OFFクーポンは併用可能（すべてのメニューで）
     }
     
-    // 11回目以降が選択された場合（初回価格になるため同一施術での割引併用不可）
+    // 11回目以降が選択された場合（初回価格になるため全クーポン併用不可）
     if (repeatCheckbox && repeatCheckbox.checked) {
-        let disabledDiscounts = [];
-        
-        // 同一施術での他の割引を無効化（11回目以降は施術ごとに適用可能）
         // 学生割引を無効化
         if (studentCheckbox) {
-            if (studentCheckbox.checked) disabledDiscounts.push('学生割引');
             studentCheckbox.checked = false;
             studentCheckbox.disabled = true;
             studentWrapper.classList.add('disabled');
         }
-        // LINEクーポンを無効化（その施術自体には適用不可）
+        // LINEクーポンを無効化
         if (lineCheckbox) {
-            if (lineCheckbox.checked) disabledDiscounts.push('LINEクーポン');
             lineCheckbox.checked = false;
             lineCheckbox.disabled = true;
             lineWrapper.classList.add('disabled');
         }
-        // 昼割を無効化（11回目以降と昼割は併用可能だが、初回価格になるため意味がない）
+        // 昼割を無効化
         if (noonCheckbox) {
-            if (noonCheckbox.checked) disabledDiscounts.push('昼割');
             noonCheckbox.checked = false;
             noonCheckbox.disabled = true;
             noonWrapper.classList.add('disabled');
         }
-        // 2,200円OFFクーポンを無効化（その施術自体には適用不可）
+        // 2,200円OFFクーポンを無効化
         if (couponCheckbox) {
-            // この施術で2200円OFFが選択されていた場合、クーポンをクリア
-            if (couponCheckbox.checked && usedCouponType === 'weekday') {
-                clearUsedCoupon();
-            }
             couponCheckbox.checked = false;
             couponCheckbox.disabled = true;
             couponWrapper.classList.add('disabled');
-        }
-        
-        // 警告メッセージを表示
-        if (disabledDiscounts.length > 0) {
-            showWarning(`11回目以降は初回価格のため、その施術では${disabledDiscounts.join('、')}と併用できません。`);
         }
     }
     
     // 2,200円OFFクーポンが選択された場合
     if (couponCheckbox && couponCheckbox.checked) {
-        // クーポンの使用可能性をチェック
-        if (!canUseCoupon('weekday', 'hairRemoval')) {
-            couponCheckbox.checked = false;
-            const couponNames = {
-                'line': 'LINEクーポン',
-                'weekday': '2200円OFFクーポン',  
-                'repeat': 'リピートクーポン'
-            };
-            showWarning(`既に${couponNames[usedCouponType]}が使用されています。1会計につき1つのクーポンのみ使用可能です。`);
-            return;
-        }
-        
-        // 他の全てのクーポンを解除
-        Object.keys(hairRemovalPriceTypes || {}).forEach(id => {
-            if (id !== itemId) {
-                const otherCouponCheckbox = document.getElementById(`coupon_${id}`);
-                const otherLineCheckbox = document.getElementById(`line_${id}`);
-                if (otherCouponCheckbox && otherCouponCheckbox.checked) {
-                    otherCouponCheckbox.checked = false;
-                }
-                if (otherLineCheckbox && otherLineCheckbox.checked) {
-                    otherLineCheckbox.checked = false;
-                }
-            }
-        });
-        
-        // 美容施術のクーポンも解除
-        Object.keys(selectedMenus).forEach(id => {
-            ['weekday', 'line', 'repeat'].forEach(type => {
-                const checkbox = document.getElementById(`${type}_${id}`);
-                if (checkbox && checkbox.checked) {
-                    checkbox.checked = false;
-                }
-            });
-        });
-        
-        // クーポンタイプを更新
-        usedCouponType = 'weekday';  // 脱毛の2200円OFFは'weekday'として管理
-        usedCouponLocation = 'hairRemoval';
-        
-        // グローバル割引チェック（昼割は除外）
-        if (globalDiscountState.hasDiscount && globalDiscountState.source !== 'hairRemoval') {
-            couponCheckbox.checked = false;
-            showWarning(`美容施術で${globalDiscountState.discountType}が選択されているため、脱毛の割引は適用できません。`);
-            return;
-        }
-        
-        let disabledDiscounts = [];
-        
         // 昼割以外のすべての割引を無効化（1施術1割引、ただし昼割+2200円OFFは併用可）
         if (studentCheckbox) {
-            if (studentCheckbox.checked) disabledDiscounts.push('学生割引');
             studentCheckbox.checked = false;
             studentCheckbox.disabled = true;
             studentWrapper.classList.add('disabled');
         }
         if (lineCheckbox) {
-            if (lineCheckbox.checked) disabledDiscounts.push('LINEクーポン');
             lineCheckbox.checked = false;
             lineCheckbox.disabled = true;
             lineWrapper.classList.add('disabled');
-            lineWrapper.title = '2,200円OFFクーポンと併用できません';
         }
         if (repeatCheckbox) {
-            if (repeatCheckbox.checked) disabledDiscounts.push('11回目以降');
             repeatCheckbox.checked = false;
             repeatCheckbox.disabled = true;
             repeatWrapper.classList.add('disabled');
         }
         // 昼割は併用可能（すべてのメニューで）
-        
-        // 警告メッセージを表示
-        if (disabledDiscounts.length > 0) {
-            showWarning(`2,200円OFFクーポンは${disabledDiscounts.join('、')}と併用できません。（昼割とは併用可能です）`);
-        }
-        
-        // グローバル割引状態を更新
-        globalDiscountState.hasDiscount = true;
-        globalDiscountState.discountType = '2,200円OFFクーポン';
-        globalDiscountState.source = 'hairRemoval';
-        
-        // 美容施術の割引を全て無効化
-        // disableAllBeautyDiscounts(); // クーポンのみ1会計1枚制限
     }
     
     // いずれの排他的な割引も選択されていない場合は全て有効化
@@ -1558,17 +1481,6 @@ function updateHairRemovalDiscounts(itemId, gender, category, index) {
         (!noonCheckbox || !noonCheckbox.checked) &&
         (!repeatCheckbox || !repeatCheckbox.checked) &&
         (!lineCheckbox || !lineCheckbox.checked)) {
-        
-        // グローバル割引状態をクリア（脱毛側のクーポンがない場合）
-        if (globalDiscountState.source === 'hairRemoval' && 
-            (!lineCheckbox || !lineCheckbox.checked) && 
-            (!couponCheckbox || !couponCheckbox.checked)) {
-            clearGlobalDiscount();
-        }
-        // クーポン管理もクリア（脱毛側のクーポンがない場合）
-        if (usedCouponLocation === 'hairRemoval') {
-            clearUsedCoupon();
-        }
         if (studentCheckbox) {
             studentCheckbox.disabled = false;
             studentWrapper.classList.remove('disabled');
@@ -1584,12 +1496,10 @@ function updateHairRemovalDiscounts(itemId, gender, category, index) {
         if (couponCheckbox) {
             couponCheckbox.disabled = false;
             couponWrapper.classList.remove('disabled');
-            couponWrapper.removeAttribute('title');
         }
         if (lineCheckbox) {
             lineCheckbox.disabled = false;
             lineWrapper.classList.remove('disabled');
-            lineWrapper.removeAttribute('title');
         }
     } else {
         // LINEクーポンが選択されている場合の特別な処理
@@ -1644,79 +1554,19 @@ function updatePartDiscounts(partId, partName, categoryIndex) {
     const repeatCheckbox = document.getElementById(`repeat_${partId}`);
     const couponCheckbox = document.getElementById(`coupon_${partId}`);
     
-    // wrapper要素も取得（部分脱毛では直接label要素を取得）
-    const studentWrapper = studentCheckbox ? studentCheckbox.closest('.discount-checkbox') : null;
-    const lineWrapper = lineCheckbox ? lineCheckbox.closest('.discount-checkbox') : null;
-    const repeatWrapper = repeatCheckbox ? repeatCheckbox.closest('.discount-checkbox') : null;
-    const couponWrapper = couponCheckbox ? couponCheckbox.closest('.discount-checkbox') : null;
-    
     // LINEクーポンが選択された場合
     if (lineCheckbox && lineCheckbox.checked) {
-        // クーポンの使用可能性をチェック
-        if (!canUseCoupon('line', 'hairRemoval')) {
-            lineCheckbox.checked = false;
-            const couponNames = {
-                'line': 'LINEクーポン',
-                'weekday': '2200円OFFクーポン',
-                'repeat': 'リピートクーポン'
-            };
-            showWarning(`既に${couponNames[usedCouponType]}が使用されています。1会計につき1つのクーポンのみ使用可能です。`);
-            return;
-        }
-        
-        // 他の全てのクーポンを解除
-        Object.keys(hairRemovalPriceTypes || {}).forEach(id => {
-            const otherLineCheckbox = document.getElementById(`line_${id}`);
-            const otherCouponCheckbox = document.getElementById(`coupon_${id}`);
-            if (otherLineCheckbox && otherLineCheckbox.checked) {
-                otherLineCheckbox.checked = false;
-            }
-            if (otherCouponCheckbox && otherCouponCheckbox.checked) {
-                otherCouponCheckbox.checked = false;
-            }
-        });
-        
-        // 美容施術のクーポンも解除
-        Object.keys(selectedMenus).forEach(id => {
-            ['weekday', 'line', 'repeat'].forEach(type => {
-                const checkbox = document.getElementById(`${type}_${id}`);
-                if (checkbox && checkbox.checked) {
-                    checkbox.checked = false;
-                }
-            });
-        });
-        
-        // クーポンタイプを更新
-        usedCouponType = 'line';
-        usedCouponLocation = 'hairRemoval';
-        
-        let disabledDiscounts = [];
-        
         if (studentCheckbox) {
-            if (studentCheckbox.checked) disabledDiscounts.push('学生割引');
             studentCheckbox.checked = false;
             studentCheckbox.disabled = true;
-            if (studentWrapper) studentWrapper.classList.add('disabled');
         }
         if (repeatCheckbox) {
-            if (repeatCheckbox.checked) disabledDiscounts.push('11回目以降');
             repeatCheckbox.checked = false;
             repeatCheckbox.disabled = true;
-            if (repeatWrapper) repeatWrapper.classList.add('disabled');
         }
         if (couponCheckbox) {
-            if (couponCheckbox.checked) disabledDiscounts.push('2,200円OFFクーポン');
             couponCheckbox.checked = false;
             couponCheckbox.disabled = true;
-            if (couponWrapper) {
-                couponWrapper.classList.add('disabled');
-                couponWrapper.title = 'LINEクーポンと併用できません';
-            }
-        }
-        
-        // 警告メッセージを表示
-        if (disabledDiscounts.length > 0) {
-            showWarning(`LINEクーポンは${disabledDiscounts.join('、')}と併用できません。`);
         }
     }
     // 学生割引が選択された場合
@@ -1724,86 +1574,14 @@ function updatePartDiscounts(partId, partName, categoryIndex) {
         if (lineCheckbox) {
             lineCheckbox.checked = false;
             lineCheckbox.disabled = true;
-            if (lineWrapper) lineWrapper.classList.add('disabled');
         }
         if (couponCheckbox) {
             couponCheckbox.checked = false;
             couponCheckbox.disabled = true;
-            if (couponWrapper) couponWrapper.classList.add('disabled');
         }
         if (repeatCheckbox) {
             repeatCheckbox.checked = false;
             repeatCheckbox.disabled = true;
-            if (repeatWrapper) repeatWrapper.classList.add('disabled');
-        }
-    }
-    // 11回目以降が選択された場合
-    else if (repeatCheckbox && repeatCheckbox.checked) {
-        if (studentCheckbox) {
-            studentCheckbox.checked = false;
-            studentCheckbox.disabled = true;
-            if (studentWrapper) studentWrapper.classList.add('disabled');
-        }
-        if (lineCheckbox) {
-            lineCheckbox.checked = false;
-            lineCheckbox.disabled = true;
-            if (lineWrapper) lineWrapper.classList.add('disabled');
-        }
-        if (couponCheckbox) {
-            couponCheckbox.checked = false;
-            couponCheckbox.disabled = true;
-            if (couponWrapper) couponWrapper.classList.add('disabled');
-        }
-    }
-    // 2,200円OFFクーポンが選択された場合
-    else if (couponCheckbox && couponCheckbox.checked) {
-        // 他の施術で2200円OFFクーポンが既に選択されているかチェック
-        const otherCouponChecked = Object.keys(hairRemovalPriceTypes).some(id => {
-            const otherCouponCheckbox = document.getElementById(`coupon_${id}`);
-            return otherCouponCheckbox && otherCouponCheckbox.checked;
-        });
-        
-        // 美容施術で2200円OFFが選択されているかもチェック
-        const beautyWeekdayChecked = Object.keys(selectedMenus).some(id => {
-            const weekdayCheckbox = document.getElementById(`weekday_${id}`);
-            return weekdayCheckbox && weekdayCheckbox.checked;
-        });
-        
-        // 美容施術でLINEクーポンが選択されているかチェック（コメントアウト - 別施術なら併用可能）
-        // const beautyLineChecked = Object.keys(selectedMenus).some(id => {
-        //     const lineCheckbox = document.getElementById(`line_${id}`);
-        //     return lineCheckbox && lineCheckbox.checked;
-        // });
-        
-        if (otherCouponChecked || beautyWeekdayChecked) {
-            couponCheckbox.checked = false;
-            showWarning('2200円OFFクーポンは1会計につき1つの施術にのみ適用可能です。');
-            return;
-        }
-        
-        // if (beautyLineChecked) {
-        //     couponCheckbox.checked = false;
-        //     showWarning('2200円OFFクーポンは美容施術のLINEクーポンと併用できません。');
-        //     return;
-        // }
-        
-        if (studentCheckbox) {
-            studentCheckbox.checked = false;
-            studentCheckbox.disabled = true;
-            if (studentWrapper) studentWrapper.classList.add('disabled');
-        }
-        if (lineCheckbox) {
-            lineCheckbox.checked = false;
-            lineCheckbox.disabled = true;
-            if (lineWrapper) {
-                lineWrapper.classList.add('disabled');
-                lineWrapper.title = '2,200円OFFクーポンと併用できません';
-            }
-        }
-        if (repeatCheckbox) {
-            repeatCheckbox.checked = false;
-            repeatCheckbox.disabled = true;
-            if (repeatWrapper) repeatWrapper.classList.add('disabled');
         }
     }
     // いずれも選択されていない場合は全て有効化
@@ -1811,28 +1589,10 @@ function updatePartDiscounts(partId, partName, categoryIndex) {
              (!lineCheckbox || !lineCheckbox.checked) &&
              (!repeatCheckbox || !repeatCheckbox.checked) &&
              (!couponCheckbox || !couponCheckbox.checked)) {
-        if (studentCheckbox) {
-            studentCheckbox.disabled = false;
-            if (studentWrapper) studentWrapper.classList.remove('disabled');
-        }
-        if (lineCheckbox) {
-            lineCheckbox.disabled = false;
-            if (lineWrapper) {
-                lineWrapper.classList.remove('disabled');
-                lineWrapper.removeAttribute('title');
-            }
-        }
-        if (repeatCheckbox) {
-            repeatCheckbox.disabled = false;
-            if (repeatWrapper) repeatWrapper.classList.remove('disabled');
-        }
-        if (couponCheckbox && partsData.regular >= 13200) {
-            couponCheckbox.disabled = false;
-            if (couponWrapper) {
-                couponWrapper.classList.remove('disabled');
-                couponWrapper.removeAttribute('title');
-            }
-        }
+        if (studentCheckbox) studentCheckbox.disabled = false;
+        if (lineCheckbox) lineCheckbox.disabled = false;
+        if (repeatCheckbox) repeatCheckbox.disabled = false;
+        if (couponCheckbox && partsData.regular >= 13200) couponCheckbox.disabled = false;
     }
 }
 
@@ -1857,8 +1617,10 @@ function addPartToSelection(partName, categoryIndex, partId) {
     if (isStudent) {
         price = Math.floor(basePrice / 2);
         priceType = selectedPriceType === 'first' ? '学生割引（初回価格の50%OFF）' : '学生割引（50%OFF）';
+    } else if (isRepeat && isCoupon && basePrice >= 13200) {
+        price = partsData.first - 2200;
+        priceType = '11回目以降（初回価格） - 2,200円OFFクーポン';
     } else if (isRepeat) {
-        // 11回目以降は初回価格（クーポン併用不可）
         price = partsData.first;
         priceType = '11回目以降（初回価格）';
     } else if (isCoupon && basePrice >= 13200) {
@@ -1880,10 +1642,8 @@ function addPartToSelection(partName, categoryIndex, partId) {
         selectedItem.price === price
     );
     
-    let addedItem;
     if (existingItem) {
         existingItem.quantity++;
-        addedItem = existingItem;
     } else {
         const selectionItem = {
             id: hairRemovalSelectionId++,
@@ -1896,15 +1656,10 @@ function addPartToSelection(partName, categoryIndex, partId) {
         };
         
         hairRemovalSelection.push(selectionItem);
-        addedItem = selectionItem;
     }
     
     updateSelectionDisplay();
     updateSummary();
-    console.log('[addPartToSelection] 選択に追加されました:', addedItem);
-    console.log('[addPartToSelection] hairRemovalSelection:', hairRemovalSelection);
-    console.log('[addPartToSelection] 現在の脱毛選択数:', hairRemovalSelection.length);
-    console.log('[addPartToSelection] 脱毛合計価格:', hairRemovalSelection.reduce((sum, item) => sum + (item.price * item.quantity), 0));
     
     // チェックボックスとオプションをリセット
     document.getElementById(partId).checked = false;
@@ -1961,8 +1716,11 @@ function addToSelection(gender, category, index) {
             const basePrice = selectedPriceType === 'first' ? item.first : item.regular;
             price = Math.floor(basePrice / 2);
             priceType = selectedPriceType === 'first' ? '学生割引（初回価格の50%OFF）' : '学生割引（50%OFF）';
+        } else if (isRepeat && isCoupon && item.first >= 13200) {
+            // 11回目以降 + クーポン
+            price = item.first - 2200;
+            priceType = '11回目以降（初回価格） - 2,200円OFFクーポン';
         } else if (isRepeat) {
-            // 11回目以降は初回価格（クーポン併用不可）
             price = item.first;
             priceType = '11回目以降（初回価格）';
         } else if (isCoupon && item.regular >= 13200) {
@@ -1992,8 +1750,11 @@ function addToSelection(gender, category, index) {
                 price = Math.floor(basePrice / 2);
                 priceType = selectedPriceType === 'first' ? '学生割引（初回価格の50%OFF）' : '学生割引（50%OFF）';
             }
+        } else if (isRepeat && isCoupon && item.first >= 13200) {
+            // 11回目以降 + クーポン
+            price = item.first - 2200;
+            priceType = '11回目以降（初回価格） - 2,200円OFFクーポン';
         } else if (isRepeat) {
-            // 11回目以降は初回価格（クーポン併用不可）
             price = item.first;
             priceType = '11回目以降（初回価格）';
         } else if (isNoon && item.noon) {
@@ -2038,11 +1799,9 @@ function addToSelection(gender, category, index) {
         selectedItem.price === price
     );
     
-    let addedItem;
     if (existingItem) {
         // 既に存在する場合は数量を増やす
         existingItem.quantity++;
-        addedItem = existingItem;
     } else {
         // 新規追加
         const selectionItem = {
@@ -2058,23 +1817,11 @@ function addToSelection(gender, category, index) {
             parts: item.parts
         };
         
-        console.log('[addToSelection] 価格情報:', {
-            itemName: item.name,
-            calculatedPrice: price,
-            priceType: priceType,
-            itemData: item
-        });
-        
         hairRemovalSelection.push(selectionItem);
-        addedItem = selectionItem;
     }
     
     updateSelectionDisplay();
     updateSummary();
-    console.log('[addToSelection] 選択に追加されました:', addedItem);
-    console.log('[addToSelection] hairRemovalSelection:', hairRemovalSelection);
-    console.log('[addToSelection] 現在の脱毛選択数:', hairRemovalSelection.length);
-    console.log('[addToSelection] 脱毛合計価格:', hairRemovalSelection.reduce((sum, item) => sum + (item.price * item.quantity), 0));
     
     // チェックボックスをリセット
     if (document.getElementById(`student_${itemId}`)) {
@@ -2096,12 +1843,6 @@ function updateSelectionDisplay() {
     const emptyMessage = document.getElementById('emptySelectionMessage');
     const selectionItems = document.getElementById('selectionItems');
     const selectionSummary = document.getElementById('selectionSummary');
-    
-    // 要素が存在しない場合は処理をスキップ
-    if (!emptyMessage || !selectionItems || !selectionSummary) {
-        console.log('[updateSelectionDisplay] 必要な要素が見つかりません。脱毛タブが表示されていない可能性があります。');
-        return;
-    }
     
     if (hairRemovalSelection.length === 0) {
         emptyMessage.style.display = 'block';
@@ -2145,16 +1886,8 @@ function updateSelectionDisplay() {
     });
     
     selectionItems.innerHTML = html;
-    
-    const totalCountElement = document.getElementById('selectionTotalCount');
-    const totalPriceElement = document.getElementById('selectionTotalPrice');
-    
-    if (totalCountElement) {
-        totalCountElement.textContent = totalCount;
-    }
-    if (totalPriceElement) {
-        totalPriceElement.textContent = totalPrice.toLocaleString();
-    }
+    document.getElementById('selectionTotalCount').textContent = totalCount;
+    document.getElementById('selectionTotalPrice').textContent = totalPrice.toLocaleString();
 }
 
 // 数量の更新
@@ -2167,7 +1900,6 @@ function updateQuantity(selectionItemId, change) {
         removeFromSelection(selectionItemId);
     } else {
         updateSelectionDisplay();
-        updateSummary(); // 合計金額バーを更新
     }
 }
 
@@ -2215,18 +1947,9 @@ function calculateHairRemovalPrice() {
     resultDiv.style.display = 'block';
 }
 
-// 美容施術メニューのリセット
+// 脱毛メニューのリセット
 function resetBeauty() {
-    // グローバル割引状態をクリア（美容側の割引のみ）
-    if (globalDiscountState.source === 'beauty') {
-        clearGlobalDiscount();
-    }
-    // クーポン管理をクリア（美容で使用していた場合）
-    if (usedCouponLocation === 'beauty') {
-        clearUsedCoupon();
-    }
-    
-    // 美容施術の選択とチェックボックスをクリア
+    // 美容施術のチェックボックスをクリア
     Object.keys(selectedMenus).forEach(itemId => {
         const checkbox = document.getElementById(itemId);
         if (checkbox) {
@@ -2237,14 +1960,38 @@ function resetBeauty() {
             }
         }
         
+        // オプションチェックボックスも無効化
+        const rejuranCheckbox = document.getElementById(`rejuran_${itemId}`);
+        const ionCheckbox = document.getElementById(`ion_${itemId}`);
+        const bluelaserCheckbox = document.getElementById(`bluelaser_${itemId}`);
+        
+        if (rejuranCheckbox) {
+            rejuranCheckbox.checked = false;
+            rejuranCheckbox.disabled = true;
+        }
+        if (ionCheckbox) {
+            ionCheckbox.checked = false;
+            ionCheckbox.disabled = true;
+        }
+        if (bluelaserCheckbox) {
+            bluelaserCheckbox.checked = false;
+            bluelaserCheckbox.disabled = true;
+        }
+        
         // 割引チェックボックスもクリア
-        ['weekday', 'line', 'repeat', 'student'].forEach(type => {
-            const discountCheckbox = document.getElementById(`${type}_${itemId}`);
+        ['weekday', 'line', 'repeat', 'student'].forEach(discountType => {
+            const discountCheckbox = document.getElementById(`${discountType}_${itemId}`);
             if (discountCheckbox) {
                 discountCheckbox.checked = false;
-                discountCheckbox.disabled = false;
             }
         });
+    });
+    
+    // すべてのオプションチェックボックスを無効化（念のため）
+    const allOptionCheckboxes = document.querySelectorAll('[id^="rejuran_"], [id^="ion_"], [id^="bluelaser_"]');
+    allOptionCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.disabled = true;
     });
     
     // 選択メニューをクリア
@@ -2253,34 +2000,42 @@ function resetBeauty() {
     hasLineDiscount = false;
     hasStudentDiscount = false;
     hasInmodeRepeatDiscount = false;
+    usedCouponType = null;
+    usedCouponLocation = null;
     
-    // サマリーを更新
-    updateSummary();
-    
-    // 美容施術の価格タイプボタンをリセット
-    const beautyPriceButtons = document.querySelectorAll('#beauty-treatments .price-type-button');
-    beautyPriceButtons.forEach(button => {
-        button.classList.remove('active');
-        if (button.textContent === '初回') {
+    // 価格タイプボタンをリセット
+    document.querySelectorAll('.price-type-button').forEach(button => {
+        if (button.id.includes('first_') && !button.disabled) {
             button.classList.add('active');
+        } else if (button.id.includes('regular_')) {
+            button.classList.remove('active');
         }
     });
     
-    // 美容施術の割引可用性を更新
-    updateDiscountAvailability();
-}
-
-// 脱毛メニューのリセット
-function resetHairRemoval() {
-    // グローバル割引状態をクリア（脱毛側の割引のみ）
-    if (globalDiscountState.source === 'hairRemoval') {
-        clearGlobalDiscount();
-    }
-    // クーポン管理をクリア（脱毛で使用していた場合）
-    if (usedCouponLocation === 'hairRemoval') {
-        clearUsedCoupon();
+    // 計算結果を非表示
+    document.getElementById('result').style.display = 'none';
+    const selectedSummary = document.getElementById('selectedSummary');
+    if (selectedSummary) {
+        selectedSummary.style.display = 'none';
     }
     
+    // 統合された詳細表示も非表示
+    const combinedResult = document.getElementById('combinedResult');
+    if (combinedResult) {
+        combinedResult.style.display = 'none';
+    }
+    
+    // オプション選択状態もリセット
+    hasIonOption = false;
+    hasBluelaserOption = false;
+    ionOptionItemId = null;
+    bluelaserOptionItemId = null;
+    
+    // 固定バーの合計金額を更新
+    updateSummary();
+}
+
+function resetHairRemoval() {
     // 選択をクリア
     hairRemovalSelection = [];
     hairRemovalSelectionId = 0;
@@ -2343,69 +2098,6 @@ function resetHairRemoval() {
     updateSummary();
 }
 
-// 詳細表示から美容施術を削除する関数
-function removeBeautyItemFromDetail(itemId) {
-    // 美容施術の選択を解除
-    const checkbox = document.getElementById(itemId);
-    if (checkbox) {
-        checkbox.checked = false;
-        const menuItem = document.getElementById(`item_${itemId}`);
-        if (menuItem) {
-            menuItem.classList.remove('selected');
-        }
-    }
-    
-    // 割引チェックボックスもクリア
-    ['weekday', 'line', 'repeat', 'student'].forEach(type => {
-        const discountCheckbox = document.getElementById(`${type}_${itemId}`);
-        if (discountCheckbox) {
-            discountCheckbox.checked = false;
-            discountCheckbox.disabled = false;
-        }
-    });
-    
-    // selectedMenusから削除
-    delete selectedMenus[itemId];
-    
-    // グローバル状態を更新
-    updateDiscountAvailability();
-    updateSummary();
-    
-    // 施術がまだ残っているか確認
-    const beautyCount = Object.keys(selectedMenus).length;
-    const hairRemovalCount = hairRemovalSelection.length;
-    
-    if (beautyCount === 0 && hairRemovalCount === 0) {
-        // すべての施術が削除された場合は詳細表示を閉じる
-        document.getElementById('combinedResult').style.display = 'none';
-    } else {
-        // まだ施術が残っている場合は詳細表示を更新
-        showDetailedPrice();
-    }
-}
-
-// 詳細表示から脱毛項目を削除する関数
-function removeHairRemovalItemFromDetail(itemId) {
-    // hairRemovalSelectionから削除
-    hairRemovalSelection = hairRemovalSelection.filter(item => item.id !== itemId);
-    
-    // 表示を更新
-    updateSelectionDisplay();
-    updateSummary();
-    
-    // 施術がまだ残っているか確認
-    const beautyCount = Object.keys(selectedMenus).length;
-    const hairRemovalCount = hairRemovalSelection.length;
-    
-    if (beautyCount === 0 && hairRemovalCount === 0) {
-        // すべての施術が削除された場合は詳細表示を閉じる
-        document.getElementById('combinedResult').style.display = 'none';
-    } else {
-        // まだ施術が残っている場合は詳細表示を更新
-        showDetailedPrice();
-    }
-}
-
 // 詳細な料金を表示する関数
 function showDetailedPrice() {
     const beautyCount = Object.keys(selectedMenus).length;
@@ -2427,9 +2119,39 @@ function showDetailedPrice() {
     if (beautyCount > 0) {
         html += '<div style="margin-bottom: 30px;"><h4 style="color: #d81b60; margin-bottom: 15px;">美容施術</h4>';
         
-        Object.entries(selectedMenus).forEach(([itemId, menu]) => {
+        Object.values(selectedMenus).forEach(menu => {
             const price = menu.currentPrice || 0;
             totalPrice += price;
+            
+            // 基本料金を計算（オプションを除く）
+            let basePrice = menu.selectedPriceType === 'first' && menu.first ? menu.first : menu.regular;
+            
+            // 割引適用（オプション以外）
+            const discountList = menu.discounts ? menu.discounts.filter(d => 
+                !d.includes('リジュラン追加') && 
+                !d.includes('イオン導入追加') && 
+                !d.includes('ブルーレーザー追加')
+            ) : [];
+            
+            if (discountList.includes('LINEクーポン')) {
+                basePrice = menu.first;
+            } else if (discountList.includes('学割')) {
+                // 学割価格を取得
+                const studentBeautyPrices = {
+                    "サリチル酸マクロゴール　顔": 3300,
+                    "ハイドラジェントル": 6600,
+                    "IPL　顔": 6600,
+                    "ブルーレーザー　顔": 3300,
+                    "サリチル酸マクロゴール＋ブルーレーザー　顔": 6600
+                };
+                if (studentBeautyPrices[menu.name]) {
+                    basePrice = studentBeautyPrices[menu.name];
+                }
+            } else if (discountList.includes('リピート（初回価格適用）')) {
+                basePrice = menu.first;
+            } else if (discountList.includes('2200円OFFクーポン')) {
+                basePrice = menu.regular - 2200;
+            }
             
             html += `
                 <div class="price-item">
@@ -2437,17 +2159,46 @@ function showDetailedPrice() {
                         <span>${menu.name}</span>
                         <div class="price-item-detail">
                             ${menu.selectedPriceType === 'first' ? '初回価格' : '通常価格'}
-                            ${menu.discounts && menu.discounts.length > 0 ? ' - ' + menu.discounts.join(', ') : ''}
+                            ${discountList.length > 0 ? ' - ' + discountList.join(', ') : ''}
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span>¥${price.toLocaleString()}</span>
-                        <button onclick="removeBeautyItemFromDetail('${itemId}')" style="background: none; border: none; cursor: pointer; padding: 5px;" title="削除">
-                            🗑️
-                        </button>
-                    </div>
+                    <span>¥${basePrice.toLocaleString()}</span>
                 </div>
             `;
+            
+            // オプション料金を別途表示
+            if (menu.discounts) {
+                menu.discounts.forEach(discount => {
+                    if (discount.includes('リジュラン追加')) {
+                        html += `
+                            <div class="price-item" style="margin-left: 20px; color: #666;">
+                                <div>
+                                    <span>├ リジュラン</span>
+                                </div>
+                                <span>¥16,500</span>
+                            </div>
+                        `;
+                    } else if (discount.includes('イオン導入追加')) {
+                        html += `
+                            <div class="price-item" style="margin-left: 20px; color: #666;">
+                                <div>
+                                    <span>├ イオン導入</span>
+                                </div>
+                                <span>¥3,300</span>
+                            </div>
+                        `;
+                    } else if (discount.includes('ブルーレーザー追加')) {
+                        html += `
+                            <div class="price-item" style="margin-left: 20px; color: #666;">
+                                <div>
+                                    <span>├ ブルーレーザー</span>
+                                </div>
+                                <span>¥6,600</span>
+                            </div>
+                        `;
+                    }
+                });
+            }
         });
         
         html += '</div>';
@@ -2470,12 +2221,7 @@ function showDetailedPrice() {
                         </div>
                         ${item.note ? `<div class="price-item-detail" style="font-size: 12px;">${item.note}</div>` : ''}
                     </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span>¥${itemTotal.toLocaleString()}</span>
-                        <button onclick="removeHairRemovalItemFromDetail(${item.id})" style="background: none; border: none; cursor: pointer; padding: 5px;" title="削除">
-                            🗑️
-                        </button>
-                    </div>
+                    <span>¥${itemTotal.toLocaleString()}</span>
                 </div>
             `;
         });
@@ -2493,14 +2239,8 @@ function showDetailedPrice() {
     if (beautyResult) beautyResult.style.display = 'none';
     if (hairRemovalResult) hairRemovalResult.style.display = 'none';
     
-    // 詳細表示エリアまでスムーズスクロール
-    setTimeout(() => {
-        combinedResultDiv.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start',
-            inline: 'nearest'
-        });
-    }, 100);
+    // 詳細表示までスクロール
+    combinedResultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 window.onload = function() {
